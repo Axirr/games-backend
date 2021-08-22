@@ -25,7 +25,8 @@ SECRET_KEY = 'django-insecure-g4pt%5*1nuvq74u%v!z=l3g0+=-uyr_l(ezw@fn6fd*k%briln
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['44.230.70.0']
+ALLOWED_HOSTS = ['44.230.70.0',
+                 '0.0.0.0']
 
 
 # Application definition
@@ -37,7 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'corsheaders'
+    'corsheaders',
+    'hello_world',
 ]
 
 MIDDLEWARE = [
@@ -79,8 +81,10 @@ WSGI_APPLICATION = 'tutorial.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'OPTIONS': {
+            'read_default_file': '/etc/mysql/my.cnf',
+        },
     }
 }
 

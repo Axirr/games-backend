@@ -45,7 +45,7 @@ def evaluate(request, gameId):
     data = data[0]
     data.evaluateWin()
     data.save()
-    return HttpResponse("")
+    return HttpResponse(data.win)
 
 def reset(request, gameId):
     data = RPSGame.objects.filter(id=gameId)
@@ -53,3 +53,15 @@ def reset(request, gameId):
     data.resetGame()
     data.save()
     return HttpResponse("")
+
+def checkId(request, gameId):
+    data = RPSGame.objects.filter(id=gameId)
+    if (len(data) > 0): 
+        return HttpResponse("ID GOOD")
+    else:
+        return HttpResponse("ID BAD")
+
+def createGame(request):
+    new_entry = RPSGame(leftHand="None", rightHand="None", win="None")
+    new_entry.save()
+    return HttpResponse(new_entry.id)

@@ -65,3 +65,6 @@ def createGame(request):
     new_entry = RPSGame(leftHand="None", rightHand="None", win="None")
     new_entry.save()
     return HttpResponse(new_entry.id)
+
+def index(request):
+    return HttpResponse("")

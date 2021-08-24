@@ -9,4 +9,5 @@ urlpatterns = [
              path('rps/<int:gameId>/reset/', views.reset, name='resetGame'),
              path('rps/<int:gameId>/checkId/', views.checkId, name='checkId'),
              path('rps/createGame/', views.createGame, name='createGame'),
+             path('', views.index, name='index'),
              ]

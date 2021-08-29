@@ -10,4 +10,11 @@ urlpatterns = [
              path('rps/<int:gameId>/checkId/', views.checkId, name='checkId'),
              path('rps/createGame/', views.createGame, name='createGame'),
              path('', views.index, name='index'),
+             path('loveletter/creategame/', views.createLoveLetterGame, name='createGameLoveLetter'),
+             path('loveletter/gamestate/<int:gameId>/', views.loveLetterReturnGameState, name='loveLetterGameState'),
+             path('loveletter/advanceturn/<int:gameId>/', views.advanceTurnLoveLetter, name='loveLetterAdvanceTurn'),
+             path('loveletter/deal/<int:gameId>/<int:numberOfPlayers>/', views.dealLoveLetter, name='loveLetterDeal'),
+             path('loveletter/playCard/<int:gameId>/<str:card>/<int:playerNumber>/<int:target>/<str:guardGuess>/', views.playCardLoveLetter, name='loveLetterPlayCard'),
+             path('loveletter/<int:gameId>/checkId/', views.checkIdLoveLetter, name='checkIdLoveLetter'),
+             path('loveletter/<int:gameId>/resetGame/', views.resetGameLoveLetter, name='resetGameLoveLetter'),
              ]

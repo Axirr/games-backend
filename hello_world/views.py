@@ -76,7 +76,7 @@ def createLoveLetterGame(request):
     new_entry.save()
     # new_entry.save()
     # new_entry = serialize('json', [new_entry, ])
-    print(new_entry)
+    # print(new_entry)
     # print(new_entry.hands)
     # jsonObject = new_entry.jsonForm()
     return HttpResponse("")
@@ -85,7 +85,7 @@ def createLoveLetterGame(request):
 def loveLetterReturnGameState(request, gameId):
     # data = serializers.serialize("json", RPSGame.objects.all())
     data = LoveLetterGame.objects.filter(id=gameId)
-    print(data[0])
+    # print(data[0])
     # returnData = serializers.serialize('json', data)
     data = serializers.serialize("json", data)
     return HttpResponse(data)

@@ -77,9 +77,9 @@ class LoveLetterGame(models.Model):
         default=['0','0','0','0']
     )
     message = ListCharField(
-        base_field=CharField(max_length=40),
+        base_field=CharField(max_length=100),
         size=6,
-        max_length=(6 * 41),
+        max_length=(6 * 101),
         default=["blank message", "blank message", "blank message", "blank message", "blank message", "blank message"]
     )
     setAsideCard = CharField(max_length=30, default="none")
@@ -143,7 +143,9 @@ class LoveLetterGame(models.Model):
     def deal(self, numberPlayers):
         newDeck = []
         if (True):
-            newDeck = ["guard", "guard", "guard", "guard", "guard", "priest", "priest", "baron", "baron", "handmaiden",
+        #     newDeck = ["guard", "guard", "guard", "guard", "guard", "priest", "priest", "baron", "baron", "handmaiden",
+        # "handmaiden", "prince", "prince", "king", "countess", "princess"]
+            newDeck = ["guard", "guard", "guard", "guard", "guard", "baron", "baron", "handmaiden",
         "handmaiden", "prince", "prince", "king", "countess", "princess"]
         else:
             print("IMPLEMENT DECK SEEDING")
@@ -160,8 +162,8 @@ class LoveLetterGame(models.Model):
             isHandMaiden.append('0')
             isDisplayed.append('1')
             playersInGame.append(i + 1)
-            drawCard = deckCopy.pop()
-            setAsideCard = deckCopy.pop()
+        drawCard = deckCopy.pop()
+        setAsideCard = deckCopy.pop()
         print("Set aside card: " + setAsideCard)
         self.hands = newHands
         self.drawCard = drawCard
@@ -173,6 +175,7 @@ class LoveLetterGame(models.Model):
         self.isDisplayed = isDisplayed
         self.totalNumberOfPlayers = numberPlayers
         self.playedCards = []
+        self.message = ["blank message","blank message","blank message","blank message","blank message","blank message"]
 
     def playCard(self, card, playerNumber, target, guardGuess):
         if (playerNumber != self.currentTurn): 
@@ -189,12 +192,12 @@ class LoveLetterGame(models.Model):
             cardIndex = ["king", "prince", "guard", "priest", "baron"].index(card)
         except ValueError:
             cardIndex = -1
-        if (not (cardIndex == -1) and self.isOnlyHandmaidenTargets()):
-            self.updateMessage("Player " + self.currentTurn + " played a " + card + " but had no valid targets.")
+        if (not (cardIndex == -1) and self.isOnlyHandmaidenTargets(card)):
+            self.updateMessage("Player " + str(self.currentTurn) + " played a " + card + " but had no valid targets.")
             isDrawCardPlayed = (card == self.drawCard)
             self.normalDrawAndAdvance(isDrawCardPlayed)
         else:
-            self.applyCardEffect(card, target)
+            self.applyCardEffect(card, target, guardGuess)
 
     def removeSelfHandmaiden(self):
         handmaidenCopy = copy.copy(self.isHandMaiden)
@@ -207,7 +210,7 @@ class LoveLetterGame(models.Model):
         if (currentHandCard == "countess" or self.drawCard == "countess"):
             if (card != "countess"):
                 if ((currentHandCard == "prince") or (currentHandCard == "king") or (self.drawCard == "prince") or (self.drawCard) == "king"):
-                    # this.alertWindow("Invalid move. Must play the countess")
+                    self.alertWindow("Invalid move. Must play the countess")
                     return False
         # Valid target check
         try:
@@ -218,55 +221,71 @@ class LoveLetterGame(models.Model):
             if (not self.isValidTarget(card, targetNumber)):
                 return False
         return True
+    
+    def alertWindow(self, message):
+        self.updateMessage(message)
 
     def isValidTarget(self, card, targetNumber):
         myTarget = targetNumber
 
         # Check still in game
         try:
-            targetIndex = self.playersInGame.index(myTarget)
+            intPlayersInGame = list(map(int, self.playersInGame))
+            targetIndex = intPlayersInGame.index(myTarget)
         except ValueError:
             targetIndex = -1
         if (targetIndex == -1):
-            this.alertWindow("INVALID MOVE. Target not in game.")
+            self.alertWindow("INVALID MOVE. Target not in game.")
             return False
 
 
         # Check if handmaiden
-        if (self.isOnlyHandmaidenTargets()):
+        if (self.isOnlyHandmaidenTargets(card)):
             return True
-        elif (this.localState.isHandMaiden[myTarget - 1]):
+        elif (self.isHandMaiden[myTarget - 1] == "1"):
         # Check not self unless prince
             try:
                 secondCardIndex = ['king', 'guard', 'baron', 'priest', 'guard'].index(card)
             except ValueError:
                 secondCardIndex = -1
             if (secondCardIndex != -1):
-                if (myTarget == this.localState.currentTurn):
-                    # this.alertWindow("INVALID MOVE. Cannot target self except with prince.")
+                if (myTarget == self.currentTurn):
+                    self.alertWindow("INVALID MOVE. Cannot target self except with prince.")
                     return False
-            elif (this.localState.playersInGame.length > 2):
-                # this.alertWindow("INVALID MOVE. Cannot target handmaiden player.")
-                return False
-            elif (card == "prince"):
-                # this.alertWindow("INVALID MOVE. Cannot target handmaiden player. Remember, Prince can target self.")
-                return False
+                elif (len(self.playersInGame) > 2):
+                    self.alertWindow("INVALID MOVE. Cannot target handmaiden player.")
+                    return False
+                elif (card == "prince"):
+                    self.alertWindow("INVALID MOVE. Cannot target handmaiden player. Remember, Prince can target self.")
+                    return False
         return True
     
     
-    def isOnlyHandmaidenTargets(self):
-        print("IMPLEMENT IS ONLY HANDMAIDEN TARGET")
-        return False
+    def isOnlyHandmaidenTargets(self, card):
+        # return False
+        onlyHandmaidens = False
+        if (card == "prince"):
+            return onlyHandmaidens
+        intPlayersInGame = list(map(int, self.playersInGame))
+        for i in range(len(intPlayersInGame)):
+            potentialTarget = intPlayersInGame[i]
+
+            # Found valid target
+            if (self.isHandMaiden[potentialTarget - 1] == '0' and potentialTarget != self.currentTurn):
+                break
+
+            # Reached end of search, no valid target found
+            if (i == (len(intPlayersInGame) - 1)):
+                onlyHandmaidens = True
+        return onlyHandmaidens
     
     def updateMessage(self, newMessage):
+        print(newMessage)
         messageCopy = copy.copy(self.message)
         for i in range(len(messageCopy) - 1):
             messageCopy[i] = messageCopy[i+1]
         messageCopy[len(messageCopy) - 1] = newMessage
         self.message = messageCopy
-    
-    def getTargetPlayerNumber(self):
-        print("IMPLEMENT GET TARGET PLAYER NUMBER")
     
     def normalDrawAndAdvance(self, isDrawCardPlayed): 
         if (not isDrawCardPlayed): 
@@ -294,18 +313,21 @@ class LoveLetterGame(models.Model):
             self.checkIfGameOver()
 
     def checkIfGameOver(self):
-        if (self.deck.length == 0):
+        # splitDeck = self.deck.split(',')
+        # print("Length of deck", len(splitDeck))
+        if (len(self.deck) == 0):
             self.evaluateShowdownWin()
             return
     
     def evaluateShowdownWin(self):
-        self.updateMessage("SHOWDOWN! Players compare card values, highest wins.")
+        self.updateMessage("SHOWDOWN! Players compare card values and highest wins.")
         # self.showAllCards()
         maxPlayer = 0
         maxValue = 0
         isTie = False
-        for i in range(len(self.playersInGame)):
-            currentPlayer = self.playersInGame[i]
+        intPlayersInGame = list(map(int, self.playersInGame))
+        for i in range(len(intPlayersInGame)):
+            currentPlayer = intPlayersInGame[i]
             cardValue = self.getCardValue(self.hands[currentPlayer - 1])
             if (cardValue > maxValue):
                 maxPlayer = currentPlayer
@@ -342,11 +364,13 @@ class LoveLetterGame(models.Model):
             print(card)
             return 0
     
-    def winProcedures(self, winningPlayer):
-        print("IMPLEMENT WIN PROCEDURES")
-
+    def winProcedures(self, player):
+        self.updateMessage("Player " + str(player) + " wins!")
+        # self.isGameOver = True
+        # window.alert("Player " + player + " wins!")
     
-    def applyCardEffect(self, card, myTarget):
+    
+    def applyCardEffect(self, card, myTarget, guess):
         # myTarget = self.getTargetPlayerNumber()
         self.playedCards.append(card)
         try:
@@ -362,7 +386,7 @@ class LoveLetterGame(models.Model):
         elif (handMaidenCardIndex != -1):
             self.updateMessage("Player " + str(self.currentTurn) + " played a " + card + ".")
         else:
-            this.updateMessage("Player " + str(self.currentTurn) + " played a " + card + " with no direct effect.")
+            self.updateMessage("Player " + str(self.currentTurn) + " played a " + card + " with no direct effect.")
         isDrawCardPlayed = (card == self.drawCard)
         if (isDrawCardPlayed):
             notPlayedCard = self.hands[self.currentTurn - 1]
@@ -373,14 +397,43 @@ class LoveLetterGame(models.Model):
             self.replaceCard(0)
             self.advanceTurn()
         elif (card == 'countess'):
-            print("IMPLEMENT CARD!")
-            pass
+            self.normalDrawAndAdvance(isDrawCardPlayed)
         elif (card == 'king'):
-            print("IMPLEMENT CARD!")
-            pass
+            self.updateMessage("Player " + str(self.currentTurn) + " trades hand with Player " + str(myTarget) + ".")
+            handsCopy = copy.copy(self.hands)
+            playerOriginalHand = handsCopy[myTarget - 1]
+            handsCopy[myTarget - 1] = notPlayedCard
+            handsCopy[self.currentTurn - 1] = playerOriginalHand
+            self.hands = handsCopy
+            if (not isDrawCardPlayed):
+                self.replaceCard(0)
+                self.advanceTurn()
+            else:
+                self.replaceCard(0)
+                self.advanceTurn()
         elif (card == 'prince'):
-            print("IMPLEMENT CARD!")
-            pass
+            self.updateMessage("Player " + str(myTarget) + " discards their hand.")
+            self.updateMessage("Player " + str(myTarget) + " hand card was a " + self.hands[myTarget - 1] + ".")
+            deckCopy = copy.copy(self.deck)
+            handsCopy = copy.copy(self.hands)
+            discardedCard = handsCopy[myTarget - 1]
+            if (myTarget == self.currentTurn):
+                if (discardedCard == "prince"):
+                    discardedCard = self.drawCard
+            if (len(deckCopy) >= 1):
+                handsCopy[myTarget - 1] = deckCopy.pop()
+            else:
+                handsCopy[myTarget - 1] = self.setAsideCard
+            self.hands = handsCopy
+            if (myTarget == self.currentTurn):
+                self.replaceCard(0)
+                self.advanceTurn()
+            else:
+                self.replaceCard(self.currentTurn)
+                self.advanceTurn()
+            if (discardedCard == "princess"):
+                self.eliminatePlayer(myTarget)
+                self.advanceTurn()
         elif (card == 'handmaiden'):
             self.updateMessage("Player " + str(self.currentTurn) + " is immune until their next turn.")
             handmaidenCopy = copy.copy(self.isHandMaiden)
@@ -388,540 +441,64 @@ class LoveLetterGame(models.Model):
             self.isHandMaiden = handmaidenCopy
             self.normalDrawAndAdvance(isDrawCardPlayed)
         elif (card == 'baron'):
-            print("IMPLEMENT CARD!")
-            pass
+            if (isDrawCardPlayed):
+                playerValue = self.getCardValue(self.hands[self.currentTurn - 1])
+            else:
+                playerValue = self.getCardValue(self.drawCard)
+            targetValue = self.getCardValue(self.hands[myTarget - 1])
+            playerToEliminate = 0
+            message = "Player " + str(myTarget) + " and Player " + str(self.currentTurn) + " tie in baron comparison."
+            if (playerValue > targetValue):
+                playerToEliminate = myTarget
+                message = "Player " + str(self.currentTurn) + " wins against Player " + str(myTarget) + " in baron comparison."
+            elif (targetValue > playerValue):
+                playerToEliminate = self.currentTurn
+                message = "Player " + str(self.currentTurn) + " loses against Player " + str(myTarget) + " in baron comparison."
+            self.updateMessage(message)
+            if (playerToEliminate != 0):
+                self.eliminatePlayer(playerToEliminate)
+            if (not isDrawCardPlayed):
+                self.replaceCard(self.currentTurn)
+            else:
+                self.replaceCard(0)
+            self.advanceTurn()
         elif (card == 'priest'):
-            print("IMPLEMENT CARD!")
-            pass
+            self.updateMessage("Player " + str(self.currentTurn) + " looks at the hand of Player " + str(myTarget) + ".")
+            # self.alertWindow("Player " + str(myTarget) + " has a " + self.hands[myTarget - 1])
+            self.normalDrawAndAdvance(isDrawCardPlayed)
         elif (card == 'guard'):
-            print("IMPLEMENT CARD!")
-            pass
+            self.updateMessage("Player " + str(self.currentTurn) + " guessed " + guess + ".")
+            actualHand = self.hands[myTarget - 1]
+            playerToEliminate = 0
+            message = "Guess was wrong."
+            if (guess == actualHand):
+                message = "Guess was right!"
+                playerToEliminate = myTarget
+            self.updateMessage(message)
+            if (playerToEliminate != 0):
+                self.eliminatePlayer(playerToEliminate)
+                self.normalDrawAndAdvance(isDrawCardPlayed)
+            else:
+                self.normalDrawAndAdvance(isDrawCardPlayed)
         else:
             print("CARD NOT FOUND!")
-        # switch(card) {
-        #     case 'princess':
-        #     case 'countess':
-        #         this.normalDrawAndAdvance(isDrawCardPlayed)
-        #         break;
-        #     case 'king':
-        #         this.updateMessage("Player " + this.localState.currentTurn + " trades hand with Player " + myTarget + ".")
-        #         var handsCopy = [...this.localState.hands]
-        #         var playerOriginalHand = handsCopy[myTarget - 1]
-        #         handsCopy[myTarget - 1] = notPlayedCard
-        #         handsCopy[this.localState.currentTurn - 1] = playerOriginalHand
-        #         this.localState['hands'] = handsCopy
-        #         if (!isDrawCardPlayed) {
-        #             this.replaceCard(0)
-        #             this.advanceTurn()
-        #         } else {
-        #             this.replaceCard(0)
-        #             this.advanceTurn()
-        #         }
-        #         break;
-        #     case 'prince':
-        #         this.updateMessage("Player " + myTarget + " discards their hand.")
-        #         this.updateMessage("Player " + myTarget + " hand card was a " + this.localState.hands[myTarget - 1] + ".")
-        #         var deckCopy = [...this.localState.deck]
-        #         var handsCopy = [...this.localState.hands]
-        #         var discardedCard = handsCopy[myTarget - 1]
-        #         if (myTarget === this.localState.currentTurn) {
-        #             if (discardedCard === "prince") {
-        #                 var discardedCard = this.localState.drawCard
-        #             }
-        #         }
-        #         if (deckCopy.length >= 1) {
-        #             handsCopy[myTarget - 1] = deckCopy.pop()
-        #         } else {
-        #             handsCopy[myTarget - 1] = this.localState.setAsideCard
-        #         }
-        #         this.localState['hands'] = handsCopy
-        #         if (myTarget === this.localState.currentTurn) {
-        #             this.replaceCard(0)
-        #             this.advanceTurn()
-        #         } else {
-        #             this.replaceCard(this.localState.currentTurn)
-        #             this.advanceTurn()
-        #         }
-        #         if (discardedCard === "princess") {
-        #             this.eliminatePlayer(myTarget)
-        #             this.advanceTurn()
-        #         } 
-        #         break;
-        #     case 'handmaiden':
-        #         this.updateMessage("Player " + this.localState.currentTurn + " is immune until their next turn.")
-        #         var handmaidenCopy = this.localState.isHandMaiden
-        #         handmaidenCopy[this.localState.currentTurn - 1] = true
-        #         this.localState['isHandMaiden'] = handmaidenCopy
-        #         this.normalDrawAndAdvance(isDrawCardPlayed)
-        #         break;
-        #     case 'baron':
-        #         if (isDrawCardPlayed) {
-        #             var playerValue = this.getCardValue(this.localState.hands[this.localState.currentTurn - 1])
-        #         } else {
-        #             var playerValue = this.getCardValue(this.localState.drawCard)
-        #         }
-        #         var targetValue = this.getCardValue(this.localState.hands[myTarget - 1])
-        #         var playerToEliminate = 0
-        #         var message = "Player " + myTarget + " and Player " + this.localState.currentTurn + " tie in baron comparison."
-        #         if (playerValue > targetValue) {
-        #             playerToEliminate = myTarget
-        #             var message = "Player " + this.localState.currentTurn + " wins against Player " + myTarget + " in baron comparison."
-        #         } else if (targetValue > playerValue) {
-        #             playerToEliminate = this.localState.currentTurn
-        #             var message = "Player " + this.localState.currentTurn + " loses against Player " + myTarget + " in baron comparison."
-        #         }
-        #         this.updateMessage(message)
-        #         if (playerToEliminate !== 0) {
-        #             this.eliminatePlayer(playerToEliminate)
-        #         }
-        #         if (!isDrawCardPlayed) {
-        #             this.replaceCard(this.localState.currentTurn)
-        #         } else {
-        #             this.replaceCard(0)
-        #         }
-        #             this.advanceTurn()
-        #         break;
-        #     case 'priest':
-        #         this.updateMessage("Player " + this.localState.currentTurn + " looks at the hand of Player " + myTarget + ".")
-        #         this.alertWindow("Player " + myTarget + " has a " + this.localState.hands[myTarget - 1])
-        #         this.normalDrawAndAdvance(isDrawCardPlayed)
-        #         break;
-        #     case 'guard':
-        #         var guess = this.getGuardGuess()
-        #         this.updateMessage("Player " + this.localState.currentTurn + " guessed " + guess + ".")
-        #         var actualHand = this.localState.hands[myTarget - 1]
-        #         var playerToEliminate = 0
-        #         var message = "Guess was wrong."
-        #         if (guess === actualHand) {
-        #             message = "Guess was right!"
-        #             playerToEliminate = myTarget
-        #         } 
-        #         this.updateMessage(message)
-        #         if (playerToEliminate !== 0) {
-        #             this.eliminatePlayer(playerToEliminate)
-        #             this.normalDrawAndAdvance(isDrawCardPlayed)
-        #         } else {
-        #             this.normalDrawAndAdvance(isDrawCardPlayed)
-        #         } 
-        #         break;
-        #     default:
-        #         console.log("ERROR, unidentified card found")
-        #         console.log(card)
-        # }
-        # this.rerenderState()
-    # }
-
-    # isOnlyHandmaidenTargets(card) {
-    #     var onlyHandmaidens = false
-    #     if (card === "prince") {
-    #         return onlyHandmaidens
-    #     }
-    #     for (var i = 0; i < this.localState.playersInGame.length; i++) {
-    #         var potentialTarget = this.localState.playersInGame[i]
-
-    #         // found valid target
-    #         if (this.localState.isHandMaiden[potentialTarget - 1] === false && potentialTarget !== this.localState.currentTurn) {
-    #             break;
-    #         }
-
-    #         // Reached end of search, no valid target found
-    #         if (i === (this.localState.playersInGame.length - 1)) {
-    #             onlyHandmaidens = true;
-    #         }
-    #     }
-    #     return onlyHandmaidens
-    # }
-
-    # isElimCardEffect(card) {
-    #     var myTarget = this.getTargetPlayerNumber()
-    #     this.localState.playedCards.push(card)
-    #     if (["guard","priest","baron", "prince", "king"].indexOf(card) !== -1) {
-    #         this.updateMessage("Player " + this.localState.currentTurn + " played a " + card + " targeting Player " + myTarget + ".")
-    #     } else if (["handmaiden"].indexOf(card) !== -1){
-    #         this.updateMessage("Player " + this.localState.currentTurn + " played a " + card + ".")
-    #     } else {
-    #         this.updateMessage("Player " + this.localState.currentTurn + " played a " + card + " with no direct effect.")
-    #     }
-    #     var isDrawCardPlayed = (card === this.localState.drawCard)
-    #     if (isDrawCardPlayed) {
-    #         var notPlayedCard = this.localState.hands[this.localState.currentTurn - 1]
-    #     } else {
-    #         var notPlayedCard = this.localState.drawCard
-    #     }
-    #     switch(card) {
-    #         case 'princess':
-    #             this.eliminatePlayer(this.localState.currentTurn)
-    #             this.replaceCard(0)
-    #             this.advanceTurn()
-    #             break;
-    #         case 'countess':
-    #             this.normalDrawAndAdvance(isDrawCardPlayed)
-    #             break;
-    #         case 'king':
-    #             this.updateMessage("Player " + this.localState.currentTurn + " trades hand with Player " + myTarget + ".")
-    #             var handsCopy = [...this.localState.hands]
-    #             var playerOriginalHand = handsCopy[myTarget - 1]
-    #             handsCopy[myTarget - 1] = notPlayedCard
-    #             handsCopy[this.localState.currentTurn - 1] = playerOriginalHand
-    #             this.localState['hands'] = handsCopy
-    #             if (!isDrawCardPlayed) {
-    #                 this.replaceCard(0)
-    #                 this.advanceTurn()
-    #             } else {
-    #                 this.replaceCard(0)
-    #                 this.advanceTurn()
-    #             }
-    #             break;
-    #         case 'prince':
-    #             this.updateMessage("Player " + myTarget + " discards their hand.")
-    #             this.updateMessage("Player " + myTarget + " hand card was a " + this.localState.hands[myTarget - 1] + ".")
-    #             var deckCopy = [...this.localState.deck]
-    #             var handsCopy = [...this.localState.hands]
-    #             var discardedCard = handsCopy[myTarget - 1]
-    #             if (myTarget === this.localState.currentTurn) {
-    #                 if (discardedCard === "prince") {
-    #                     var discardedCard = this.localState.drawCard
-    #                 }
-    #             }
-    #             if (deckCopy.length >= 1) {
-    #                 handsCopy[myTarget - 1] = deckCopy.pop()
-    #             } else {
-    #                 handsCopy[myTarget - 1] = this.localState.setAsideCard
-    #             }
-    #             this.localState['hands'] = handsCopy
-    #             if (myTarget === this.localState.currentTurn) {
-    #                 this.replaceCard(0)
-    #                 this.advanceTurn()
-    #             } else {
-    #                 this.replaceCard(this.localState.currentTurn)
-    #                 this.advanceTurn()
-    #             }
-    #             if (discardedCard === "princess") {
-    #                 this.eliminatePlayer(myTarget)
-    #                 this.advanceTurn()
-    #             } 
-    #             break;
-    #         case 'handmaiden':
-    #             this.updateMessage("Player " + this.localState.currentTurn + " is immune until their next turn.")
-    #             var handmaidenCopy = this.localState.isHandMaiden
-    #             handmaidenCopy[this.localState.currentTurn - 1] = true
-    #             this.localState['isHandMaiden'] = handmaidenCopy
-    #             this.normalDrawAndAdvance(isDrawCardPlayed)
-    #             break;
-    #         case 'baron':
-    #             if (isDrawCardPlayed) {
-    #                 var playerValue = this.getCardValue(this.localState.hands[this.localState.currentTurn - 1])
-    #             } else {
-    #                 var playerValue = this.getCardValue(this.localState.drawCard)
-    #             }
-    #             var targetValue = this.getCardValue(this.localState.hands[myTarget - 1])
-    #             var playerToEliminate = 0
-    #             var message = "Player " + myTarget + " and Player " + this.localState.currentTurn + " tie in baron comparison."
-    #             if (playerValue > targetValue) {
-    #                 playerToEliminate = myTarget
-    #                 var message = "Player " + this.localState.currentTurn + " wins against Player " + myTarget + " in baron comparison."
-    #             } else if (targetValue > playerValue) {
-    #                 playerToEliminate = this.localState.currentTurn
-    #                 var message = "Player " + this.localState.currentTurn + " loses against Player " + myTarget + " in baron comparison."
-    #             }
-    #             this.updateMessage(message)
-    #             if (playerToEliminate !== 0) {
-    #                 this.eliminatePlayer(playerToEliminate)
-    #             }
-    #             if (!isDrawCardPlayed) {
-    #                 this.replaceCard(this.localState.currentTurn)
-    #             } else {
-    #                 this.replaceCard(0)
-    #             }
-    #                 this.advanceTurn()
-    #             break;
-    #         case 'priest':
-    #             this.updateMessage("Player " + this.localState.currentTurn + " looks at the hand of Player " + myTarget + ".")
-    #             this.alertWindow("Player " + myTarget + " has a " + this.localState.hands[myTarget - 1])
-    #             this.normalDrawAndAdvance(isDrawCardPlayed)
-    #             break;
-    #         case 'guard':
-    #             var guess = this.getGuardGuess()
-    #             this.updateMessage("Player " + this.localState.currentTurn + " guessed " + guess + ".")
-    #             var actualHand = this.localState.hands[myTarget - 1]
-    #             var playerToEliminate = 0
-    #             var message = "Guess was wrong."
-    #             if (guess === actualHand) {
-    #                 message = "Guess was right!"
-    #                 playerToEliminate = myTarget
-    #             } 
-    #             this.updateMessage(message)
-    #             if (playerToEliminate !== 0) {
-    #                 this.eliminatePlayer(playerToEliminate)
-    #                 this.normalDrawAndAdvance(isDrawCardPlayed)
-    #             } else {
-    #                 this.normalDrawAndAdvance(isDrawCardPlayed)
-    #             } 
-    #             break;
-    #         default:
-    #             console.log("ERROR, unidentified card found")
-    #             console.log(card)
-    #     }
-    #     this.rerenderState()
-    # }
-
-    # getCardValue(card) {
-    #     switch(card) {
-    #         case "princess":
-    #             return 8
-    #         case "countess":
-    #             return 7
-    #         case "king":
-    #             return 6
-    #         case "prince":
-    #             return 5
-    #         case "handmaiden":
-    #             return 4
-    #         case "baron":
-    #             return 3
-    #         case "priest":
-    #             return 2
-    #         case "guard":
-    #             return 1
-    #         default:
-    #             console.log("ERROR, unidentified card found")
-    #             console.log(card)
-    #             return 0
-    #     }
-
-    # }
-
-    #     // Check if handmaiden
-    #     if (this.isOnlyHandmaidenTargets()) {
-    #         return true
-    #     } else if (this.localState.isHandMaiden[myTarget - 1]) {
-    #     // Check not self unless prince
-    #         if (['king', 'guard', 'baron', 'priest', 'guard'].indexOf(card) !== -1) {
-    #             if (myTarget === this.localState.currentTurn) {
-    #                 this.alertWindow("INVALID MOVE. Cannot target self except with prince.")
-    #                 return false
-    #             }
-    #         } else if (this.localState.playersInGame.length > 2) {
-    #             this.alertWindow("INVALID MOVE. Cannot target handmaiden player.")
-    #             return false
-    #         } else if (card === "prince") {
-    #             this.alertWindow("INVALID MOVE. Cannot target handmaiden player. Remember, Prince can target self.")
-    #             return false
-    #         }
-    #     }
-    #     return true
-    # }
-
-    # replaceCard(playerNumber) {
-    #     // var deckCopy = [...this.localState.deck]
-    #     if (this.localState.deck.length == 0) {
-    #         var drawnCard = "none"
-    #     } else {
-    #         var drawnCard = this.localState.deck.pop()
-    #     }
-    #     if (playerNumber === 0) {
-    #         this.localState['drawCard'] = drawnCard
-    #         this.checkIfGameOver()
-    #     } else {
-    #         var copyHands = [...this.localState.hands]
-    #         copyHands[playerNumber - 1] = this.localState.drawCard
-    #         this.localState['hands'] = copyHands
-    #         this.localState['drawCard'] = drawnCard
-    #         this.checkIfGameOver()
-    #     }
-    #     this.hideAllCards()
-    # }
-
-    # checkIfGameOver() {
-    #     if (this.localState.deck.length === 0) {
-    #         this.evaluateShowdownWin()
-    #         return
-    #     }
-    # }
-
-    # evaluateShowdownWin() {
-    #     this.updateMessage("SHOWDOWN! Players compare card values, highest wins.")
-    #     this.showAllCards()
-    #     var maxPlayer = 0
-    #     var maxValue = 0
-    #     var isTie = false
-    #     for (var i = 0; i < this.localState.playersInGame.length; i++) {
-    #         var currentPlayer = this.localState.playersInGame[i]
-    #         var cardValue = this.getCardValue(this.localState.hands[currentPlayer - 1])
-    #         if (cardValue > maxValue) {
-    #             maxPlayer = currentPlayer
-    #             maxValue = cardValue
-    #             isTie = false
-    #         } else if (cardValue === maxValue) {
-    #             isTie = true
-    #         }
-    #     }
-    #     this.localState['currentTurn'] = -1
-    #     this.rerenderState()
-    #     if (!isTie) {
-    #         this.winProcedures(maxPlayer)
-    #         // this.updateMessage("Player " + maxPlayer + " wins showdown!")
-    #         // window.alert("Player " + maxPlayer + " wins showdown!")
-    #     } else {
-    #         this.updateMessage("Tie!")
-    #         console.log("BUG: Implement tie solution.")
-    #     }
-    # }
-
-    # advanceTurn() {
-    #     var currentIndex = this.localState.playersInGame.indexOf(this.localState.currentTurn)
-    #     if (currentIndex === -1) {
-    #         var potentialPlayers = []
-    #         for (var i = 1; i < this.localState.totalNumberOfPlayers; i++) {
-    #             var player = i + this.localState.currentTurn 
-    #             if (player <= this.localState.totalNumberOfPlayers) {
-    #                 potentialPlayers.push(player)
-    #             } else {
-    #                 potentialPlayers.push(player % this.localState.totalNumberOfPlayers)
-    #             }
-    #         }
-    #         var nextClosestPlayer = this.localState.playersInGame[0]
-    #         for (var i = 0; i < potentialPlayers.length; i++) {
-    #             if (this.localState.playersInGame.indexOf(potentialPlayers[i]) !== -1) {
-    #                 nextClosestPlayer = potentialPlayers[i]
-    #                 break
-    #             }
-    #         }
-    #         this.localState['currentTurn'] = nextClosestPlayer
-    #     } else {
-    #         this.localState['currentTurn'] = this.localState.playersInGame[(currentIndex + 1) % this.localState.playersInGame.length]  
-    #     }
-    #     this.rerenderState()
-    # }
-
-    # eliminatePlayer(playerNumber) {
-    #     var copyPlayers = [...this.localState.playersInGame]
-    #     let index = copyPlayers.indexOf(playerNumber)
-    #     copyPlayers.splice(index, 1)
-    #     this.localState['playersInGame'] = copyPlayers
-    #     this.updateMessage("Player " + playerNumber + " was eliminated.")
-    #     this.updateMessage("Player " + playerNumber + " discarded a " + this.localState.hands[playerNumber - 1] + ".")
-    #     this.localState.playedCards.push(this.localState.hands[playerNumber - 1])
-    #     if (copyPlayers.length === 1) {
-    #         this.winProcedures(copyPlayers[0])
-    #     }
-    # }
-
-    # winProcedures(player) {
-    #     this.updateMessage("Player " + player + " wins!")
-    #     this.isGameOver = true
-    #     window.alert("Player " + player + " wins!")
-    #     this.showAllCards()
-    # }
-
-
-    # printState() {
-    #     console.log(this.state)
-    # }
-
-    # showCurrentPlayerCards() {
-    #     var displayCopy = this.localState.isDisplayed
-    #     displayCopy[this.localState.currentTurn - 1] = true
-    #     displayCopy[this.localState.totalNumberOfPlayers] = true
-    #     this.localState['isDisplayed'] = displayCopy
-    #     this.rerenderState()
-    # }
-
-    # hideAllCards() {
-    #     var displayCopy = this.localState.isDisplayed
-    #     for (var i = 0; i < displayCopy.length; i++) {
-    #         displayCopy[i] = false
-    #     }
-    #     this.localState['isDisplayed'] = displayCopy
-    #     this.rerenderState()
-    # }
-
-    # showAllCards() {
-    #     var displayCopy = this.localState.isDisplayed
-    #     for (var i = 0; i < displayCopy.length; i++) {
-    #         displayCopy[i] = true
-    #     }
-    #     this.localState['isDisplayed'] = displayCopy
-    #     this.rerenderState()
-    # }
-
-    # renderHands() {
-    #     // var newPlayers = [];
-    #     // for (var i = 1; i <= this.localState.playersInGame.length; i++ ) {
-    #     //     newPlayers.push(i)
-    #     // }
-
-    #     //SET STATE COLLECTIVELY
-
-    #     return(
-    #         <div>
-    #             {this.state.playersInGame.map((number) => {
-    #                 return(
-    #                 <div class="col-12">Hand {number}{this.state.isDisplayed[number - 1] && 
-    #                     <div>
-    #                         <div>
-    #                     <button id={"hand"+number}> 
-    #                     <img src={this.getLinkForCard(this.localState.hands[number - 1])} width="100" 
-    #                     onClick={(() => { this.playerPlayCard(number, this.localState.hands[number - 1]) })}/>
-    #                     </button> 
-    #                         </div>
-    #                     </div>}
-    #                 </div>);
-    #             })}
-    #         </div>
-    #     );
-    # }
-
-    # getLinkForCard(card) {
-    #     let imageLink=""
-    #     switch (card) {
-    #         case "guard":
-    #             imageLink=guardCard
-    #             break
-    #         case "priest":
-    #             imageLink=priestCard
-    #             break
-    #         case "baron":
-    #             imageLink=baronCard
-    #             break
-    #         case "handmaiden":
-    #             imageLink=handmaidenCard
-    #             break
-    #         case "prince":
-    #             imageLink=princeCard
-    #             break
-    #         case "king":
-    #             imageLink=kingCard
-    #             break
-    #         case "countess":
-    #             imageLink=countessCard
-    #             break
-    #         case "princess":
-    #             imageLink=princessCard
-    #             break
-    #         default:
-    #             console.log("Error, unrecognized")
-    #     }
-    #     console.log(imageLink)
-    #     return imageLink
-    # }
-
-    # renderTargets() {
-    #     let allPlayers = []
-    #     for (let i = 1; i <= this.localState.totalNumberOfPlayers; i++) {
-    #         allPlayers.push(i)
-    #     }
-    #     return(
-    #         <div>
-    #             {allPlayers.map((number) => {
-    #                 return(
-    #                     <div class="col-12">
-    #                         <input type="radio" value={number} name="target" defaultChecked/>Player {number}
-    #                     </div>
-    #             )})}
-    #         </div>
-    #     );
-    # }
+    
+    def eliminatePlayer(self, playerNumber):
+        intPlayersInGame = list(map(int, self.playersInGame))
+        print("intPlayersInGame ",intPlayersInGame)
+        try:
+            index = intPlayersInGame.index(playerNumber)
+        except ValueError:
+            index = -1
+        del intPlayersInGame[index]
+        # copyPlayers.splice(index, 1)
+        print(list(map(str, intPlayersInGame)))
+        self.playersInGame = list(map(str, intPlayersInGame))
+        self.updateMessage("Player " + str(playerNumber) + " was eliminated.")
+        self.updateMessage("Player " + str(playerNumber) + " discarded a " + self.hands[playerNumber - 1] + ".")
+        self.playedCards.append(self.hands[playerNumber - 1])
+        if (len(intPlayersInGame) == 1):
+            self.winProcedures(intPlayersInGame[0])
 
     # playTurn(player) {
     #     if (this.isGameOver) {

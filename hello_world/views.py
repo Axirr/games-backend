@@ -73,13 +73,14 @@ def index(request):
 
 def createLoveLetterGame(request):
     new_entry = LoveLetterGame()
+    new_entry.deal(4)
     new_entry.save()
     # new_entry.save()
     # new_entry = serialize('json', [new_entry, ])
     # print(new_entry)
     # print(new_entry.hands)
     # jsonObject = new_entry.jsonForm()
-    return HttpResponse("")
+    return HttpResponse(new_entry.id)
     # new_entry.save()
 
 def loveLetterReturnGameState(request, gameId):
@@ -97,9 +98,9 @@ def advanceTurnLoveLetter(request, gameId):
     data = serializers.serialize("json", [data,])
     return HttpResponse(data)
 
-def dealLoveLetter(request, gameId, numberOfPlayers):
+def dealLoveLetter(request, gameId, numberOfPlayers, deckNumber):
     data = LoveLetterGame.objects.get(id=gameId)
-    data.deal(numberOfPlayers)
+    data.deal(numberOfPlayers, deckNumber)
     print(data)
     data.save()
     data = serializers.serialize("json", [data,])
@@ -107,11 +108,11 @@ def dealLoveLetter(request, gameId, numberOfPlayers):
 
 def playCardLoveLetter(request, gameId, card, playerNumber, target, guardGuess):
     game = LoveLetterGame.objects.get(id=gameId)
-    game.playCard(card, playerNumber, target, guardGuess)
+    response = game.playCard(card, playerNumber, target, guardGuess)
     # print(game)
     game.save()
-    game = serializers.serialize("json", [game,])
-    return HttpResponse(game)
+    # game = serializers.serialize("json", [game,])
+    return HttpResponse(response)
 
 def checkIdLoveLetter(request, gameId):
     data = LoveLetterGame.objects.filter(id=gameId)
@@ -120,9 +121,9 @@ def checkIdLoveLetter(request, gameId):
     else:
         return HttpResponse("ID BAD")
 
-def resetGameLoveLetter(request, gameId):
+def resetGameLoveLetter(request, gameId, deckNumber):
     game = LoveLetterGame.objects.get(id=gameId)
-    game.resetGame()
+    game.resetGame(deckNumber)
     game.save()
     game = serializers.serialize("json", [game,])
     return HttpResponse(game)

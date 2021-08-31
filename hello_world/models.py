@@ -140,16 +140,15 @@ class LoveLetterGame(models.Model):
             print("Player found way")
             self.currentTurn = intPlayersInGame[(currentIndex + 1) % len(intPlayersInGame)]
 
-    def deal(self, numberPlayers):
+    def deal(self, numberPlayers, deckNumber=0):
         newDeck = []
-        if (True):
-        #     newDeck = ["guard", "guard", "guard", "guard", "guard", "priest", "priest", "baron", "baron", "handmaiden",
-        # "handmaiden", "prince", "prince", "king", "countess", "princess"]
-            newDeck = ["guard", "guard", "guard", "guard", "guard", "baron", "baron", "handmaiden",
+        doShuffle = True
+        if (deckNumber == 0):
+            newDeck = ["guard", "guard", "guard", "guard", "guard", "priest", "priest", "baron", "baron", "handmaiden",
         "handmaiden", "prince", "prince", "king", "countess", "princess"]
         else:
-            print("IMPLEMENT DECK SEEDING")
-        doShuffle = True
+            doShuffle = False
+            newDeck = self.getDeckForDeckNumber(deckNumber)
         if (doShuffle):
             random.shuffle(newDeck)
         deckCopy = copy.copy(newDeck)
@@ -178,16 +177,20 @@ class LoveLetterGame(models.Model):
         self.message = ["blank message","blank message","blank message","blank message","blank message","blank message"]
 
     def playCard(self, card, playerNumber, target, guardGuess):
+        response = ""
         if (playerNumber != self.currentTurn): 
-            print("NOT CURRENT PLAYER")
-            return
+            response = "Not your turn. Current turn is Player " + str(self.currentTurn) + "."
+            print(response)
+            return response
         self.removeSelfHandmaiden()
-        if (self.currentTurn <= 0 ):
-            print("GAME IS OVER")
-            return
+        if (self.currentTurn < 0 ):
+            response = "Game is over. No valid moves unless you reset the game."
+            print(response)
+            return response
         if (not self.isValidMove(card, target)):
-            print("Not a valid move")
-            return
+            response = "Not a valid move"
+            print(response)
+            return response
         try:
             cardIndex = ["king", "prince", "guard", "priest", "baron"].index(card)
         except ValueError:
@@ -197,7 +200,14 @@ class LoveLetterGame(models.Model):
             isDrawCardPlayed = (card == self.drawCard)
             self.normalDrawAndAdvance(isDrawCardPlayed)
         else:
-            self.applyCardEffect(card, target, guardGuess)
+            response = self.cardEffect(card, target, guardGuess)
+        return response
+    
+    def getDeckForDeckNumber(self, deckNumber):
+        if (deckNumber == 1):
+            deck = ["guard", "guard","guard","countess","priest","guard","king", "baron", "king", "princess"] 
+        return deck
+
 
     def removeSelfHandmaiden(self):
         handmaidenCopy = copy.copy(self.isHandMaiden)
@@ -294,23 +304,22 @@ class LoveLetterGame(models.Model):
             self.replaceCard(0)
         self.advanceTurn()
     
-    def resetGame(self): 
-        self.deal(self.totalNumberOfPlayers)
+    def resetGame(self, deckNumber): 
+        self.deal(self.totalNumberOfPlayers, deckNumber)
 
     def replaceCard(self, playerNumber):
+        self.checkIfGameOver()
         if (len(self.deck) == 0):
             drawnCard = "none"
         else:
             drawnCard = self.deck.pop()
         if (playerNumber == 0):
             self.drawCard = drawnCard
-            self.checkIfGameOver()
         else:
             copyHands = copy.copy(self.hands)
             copyHands[playerNumber - 1] = self.drawCard
             self.hands = copyHands
             self.drawCard = drawnCard
-            self.checkIfGameOver()
 
     def checkIfGameOver(self):
         # splitDeck = self.deck.split(',')
@@ -339,8 +348,7 @@ class LoveLetterGame(models.Model):
         if (not isTie):
             self.winProcedures(maxPlayer)
         else:
-            self.updateMessage("Tie!")
-            # console.log("BUG: Implement tie solution.")
+            self.winProcedures(-1)
 
     def getCardValue(self, card):
         if (card == "princess"):
@@ -365,13 +373,15 @@ class LoveLetterGame(models.Model):
             return 0
     
     def winProcedures(self, player):
-        self.updateMessage("Player " + str(player) + " wins!")
-        # self.isGameOver = True
-        # window.alert("Player " + player + " wins!")
+        if (player < 0):
+            self.updateMessage("Tie!")
+        else:
+            self.updateMessage("Player " + str(player) + " wins!")
+        self.currentTurn = -1
     
     
-    def applyCardEffect(self, card, myTarget, guess):
-        # myTarget = self.getTargetPlayerNumber()
+    def cardEffect(self, card, myTarget, guess):
+        response = ""
         self.playedCards.append(card)
         try:
             targetCardIndex = ["guard","priest","baron", "prince", "king"].index(card) 
@@ -464,7 +474,7 @@ class LoveLetterGame(models.Model):
             self.advanceTurn()
         elif (card == 'priest'):
             self.updateMessage("Player " + str(self.currentTurn) + " looks at the hand of Player " + str(myTarget) + ".")
-            # self.alertWindow("Player " + str(myTarget) + " has a " + self.hands[myTarget - 1])
+            response = "Player " + str(myTarget) + " has a " + self.hands[myTarget - 1]
             self.normalDrawAndAdvance(isDrawCardPlayed)
         elif (card == 'guard'):
             self.updateMessage("Player " + str(self.currentTurn) + " guessed " + guess + ".")
@@ -482,6 +492,7 @@ class LoveLetterGame(models.Model):
                 self.normalDrawAndAdvance(isDrawCardPlayed)
         else:
             print("CARD NOT FOUND!")
+        return response
     
     def eliminatePlayer(self, playerNumber):
         intPlayersInGame = list(map(int, self.playersInGame))
@@ -499,117 +510,3 @@ class LoveLetterGame(models.Model):
         self.playedCards.append(self.hands[playerNumber - 1])
         if (len(intPlayersInGame) == 1):
             self.winProcedures(intPlayersInGame[0])
-
-    # playTurn(player) {
-    #     if (this.isGameOver) {
-    #         window.alert("Game is over.")
-    #         return
-    #     }
-    #     // Random choice if not princess
-    #     let chosenCard = this.getCardToPlay(player)
-
-    #     // Random valid target
-    #     let playersCopy = [...this.localState.playersInGame]
-    #     playersCopy = this.returnShuffledDeck(playersCopy)
-    #     let playerTarget = playersCopy[0]
-    #     for (let i = 0; i < playersCopy.length; i++) {
-    #         if (playersCopy[i] !== player && !this.localState.isHandMaiden[playersCopy[i] - 1]) {
-    #             playerTarget = playersCopy[i]
-    #             break
-    #         }
-    #     }
-    #     this.setTarget(playerTarget)
-
-    #     this.setRandomGoodGuess()
-
-    #     this.rerenderState(() => {
-    #         this.playerPlayCard(this.localState.currentTurn, chosenCard)
-    #     })
-    # }
-    
-    # doesActivePlayerHaveCard(player, card) {
-    #     return (this.localState.hands[player - 1] === card || this.localState.drawCard === card)
-    # }
-
-    # getCardToPlay(player) {
-    #     const playerIndex = player - 1
-    #     let playerHand = [this.localState.hands[playerIndex], this.localState.drawCard]
-    #     let chosenCard;
-    #     if (playerHand.indexOf("princess") !== -1) {
-    #         console.log("Non-princess card played")
-    #         playerHand.splice(playerHand.indexOf("princess"), 1)
-    #         chosenCard = playerHand[0]
-    #     } else if ((this.doesActivePlayerHaveCard(player, "countess")) && ((this.doesActivePlayerHaveCard(player, "prince") || this.doesActivePlayerHaveCard(player, "king")))) {
-    #         console.log("Forced countess play.")
-    #         chosenCard = "countess"
-    #     } else {
-    #         if (this.localState.deck.length <= this.localState.playersInGame) {
-    #             // play low card to keep higher one for showdown
-    #             const handCardValue = this.getCardValue(this.localState.hands[player - 1])
-    #             const drawCardValue = this.getCardValue(this.localState.drawCard)
-    #             chosenCard = this.localState.hands[player - 1]
-    #             if (drawCardValue < handCardValue) {
-    #                 chosenCard = this.localState.drawCard
-    #             }
-    #         } else {
-    #             chosenCard = playerHand[Math.floor(Math.random() * 2)]
-    #             if (this.doesActivePlayerHaveCard(this.localState.currentTurn, 'guard') && Math.random() < 0.8) {
-    #                 chosenCard = "guard"
-    #             } else if (this.doesActivePlayerHaveCard(this.localState.currentTurn, "handmaiden") && Math.random() < 0.9) {
-    #                 chosenCard = "handmaiden"
-    #             } else if (this.doesActivePlayerHaveCard(this.localState.currentTurn, "baron")) {
-    #                 let handCopy = [...playerHand]
-    #                 handCopy.splice(handCopy.indexOf("baron"), 1)
-    #                 if ((this.getCardValue(handCopy[0]) >= 3) && (this.getCardValue(handCopy[0]) > (Math.random() * 10))) {
-    #                     chosenCard = "baron"
-    #                 }
-    #             }
-    #         }
-
-    #         // // check if close to end
-
-    #     }
-    #     return chosenCard
-    # }
-
-    # setTarget(number) {
-    #     let radioList = document.getElementsByName("target")
-    #     for (let i = 0; i < radioList.length; i++) {
-    #         let button = radioList[i]
-    #         // console.log(button["value"])
-    #         if (Number.parseInt(button["value"]) === number) {
-    #             button.checked = true;
-    #             break
-    #         } 
-    #     }
-    #     // console.log(radioList)
-    # }
-
-    # setRandomGoodGuess(player) {
-    #     // console.log(this.localState.playedCards)
-    #     let deckCopy = [...this.localState.defaultDeck]
-    #     for (let i = 0; i < this.localState.playedCards.length; i++) {
-    #         deckCopy.splice(deckCopy.indexOf(this.localState.playedCards[i]), 1)
-    #     }
-    #     for (let i = (deckCopy.length - 1); i >= 0; i--) {
-    #         if (deckCopy[i] === "guard") {
-    #             deckCopy.splice(i, 1)
-    #         }
-    #     }
-    #     deckCopy.splice(deckCopy.indexOf(this.localState.drawCard), 1)
-    #     deckCopy.splice(deckCopy.indexOf(this.localState.hands[player - 1]), 1)
-    #     console.log(deckCopy)
-    #     const randomGuessNumber = Math.floor(Math.random() * deckCopy.length)
-    #     let randomGuessString = "princess"
-    #     if (deckCopy.length > 0) {
-    #         randomGuessString = deckCopy[randomGuessNumber]
-    #     }
-    #     let radioList = document.getElementsByName("guardGuess")
-    #     for (let i = 0; i < radioList.length; i++) {
-    #         let button = radioList[i]
-    #         if (button["value"] === randomGuessString) {
-    #             button.checked = true;
-    #             break
-    #         } 
-    #     }
-    # }

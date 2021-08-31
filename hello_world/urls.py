@@ -13,8 +13,8 @@ urlpatterns = [
              path('loveletter/creategame/', views.createLoveLetterGame, name='createGameLoveLetter'),
              path('loveletter/gamestate/<int:gameId>/', views.loveLetterReturnGameState, name='loveLetterGameState'),
              path('loveletter/advanceturn/<int:gameId>/', views.advanceTurnLoveLetter, name='loveLetterAdvanceTurn'),
-             path('loveletter/deal/<int:gameId>/<int:numberOfPlayers>/', views.dealLoveLetter, name='loveLetterDeal'),
+             path('loveletter/deal/<int:gameId>/<int:numberOfPlayers>/<int:deckNumber>', views.dealLoveLetter, name='loveLetterDeal'),
              path('loveletter/playCard/<int:gameId>/<str:card>/<int:playerNumber>/<int:target>/<str:guardGuess>/', views.playCardLoveLetter, name='loveLetterPlayCard'),
              path('loveletter/<int:gameId>/checkId/', views.checkIdLoveLetter, name='checkIdLoveLetter'),
-             path('loveletter/<int:gameId>/resetGame/', views.resetGameLoveLetter, name='resetGameLoveLetter'),
+             path('loveletter/<int:gameId>/resetGame/<int:deckNumber>/', views.resetGameLoveLetter, name='resetGameLoveLetter'),
              ]

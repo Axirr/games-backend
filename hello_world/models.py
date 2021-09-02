@@ -69,13 +69,13 @@ class ShogunGame(models.Model):
     maxPlayers = models.IntegerField(default=4)
 
     # CHANGE FOR PRODUCTION
-    # startingEnergy = 0
-    # startingHealth = 10
-    # playToPoints = 20
+    startingEnergy = 0
+    startingHealth = 10
+    playToPoints = 20
 
-    startingEnergy = 5
-    startingHealth = 5
-    playToPoints = 5
+    # startingEnergy = 5
+    # startingHealth = 5
+    # playToPoints = 5
     # END CHANGE FOR PRODUCTION
 
     cards = [

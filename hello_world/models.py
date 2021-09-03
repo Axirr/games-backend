@@ -4,6 +4,7 @@ from django_mysql.models import ListCharField
 from django.db.models import CharField
 import copy
 import random
+import math
 
 class ShogunGame(models.Model):
     dice = ListCharField(
@@ -116,7 +117,7 @@ class ShogunGame(models.Model):
         {'name': "Throw A Tanker", 'cost': 4, 'type': 'keep', 'ability': "On a turn you deal 3 or more damage, gain 2 points."},
     ]
 
-    def setup(self, numberPlayers):
+    def setup(self, numberPlayers, deck=None, isShuffle=True):
         # self.canBuy = False
         # self.canYield = False
         # self.buttonPhase = 0
@@ -124,11 +125,13 @@ class ShogunGame(models.Model):
         newSaved = ["0", "0", "0", "0", "0", "0"]
         newHands = []
         newPlayers = []
-        newDeck = self.deck
-        if (self.doShuffle):
+        if (deck):
+            newDeck = deck
+        else:
+            newDeck = self.cards
+        if (isShuffle):
             print("Shuffling")
-            print("IMPLEMENT SHUFFLE NOT WORKING")
-            newDeck = random.shuffle(newDeck)
+            random.shuffle(newDeck)
         else:
             print("Not shuffling.")
         newPoints = []
@@ -145,7 +148,7 @@ class ShogunGame(models.Model):
         self.notDirectUsePlayersInGame = list(map(str, newPlayers))
         self.currentTurn = 1
         self.hands = newHands
-        self.deck = self.cards
+        self.deck = newDeck
         self.message = ["none", "none", "none", "none", "none", "none"]
         self.doShuffle = True
         self.notDirectUsePoints = list(map(str, newPoints))
@@ -339,6 +342,7 @@ class ShogunGame(models.Model):
         healthToAdd = 0
         damage = 0
         pointsToAdd = self.pointsForRoll()
+        # pointsToAdd = 0
         count = self.count(self.dice, 'energy')
         energyToAdd += count
         count = self.count(self.dice, 'heart')
@@ -358,11 +362,11 @@ class ShogunGame(models.Model):
                 if (not self.onlyCurrentPlayerInEdo()):
                     self.canYield = True
             else:
-                self.alertWindow("Implement yield for double edo")
+                print("IMPLEMENT yield for double Edo")
             # Fix for both and yield
         if (self.hasCard(self.currentTurn, "Complete Destruction")):
             diceFaces = ['claw','heart','energy', '1','2','3']
-            diceCounts = diceFaces.map(lambda face : self.count(self.dice, face))
+            diceCounts = list(map(lambda face : self.count(self.dice, face), diceFaces))
             if (self.count(diceCounts, 1) == 6):
                 self.updateMessage("Player " + str(self.currentTurn) + " earns 9 points for COMPLETE DESTRUCTION!")
                 self.addPoints(self.currentTurn, 9)
@@ -372,13 +376,45 @@ class ShogunGame(models.Model):
         else:
             self.buttonPhase = 2
         return response
+    
+    def setDice(self, diceCode):
+        response = ""
+        diceArray = []
+        if (diceCode == "333"):
+            diceArray = ["3","3","3","1","2","2"]
+        elif (diceCode == "oneClaw"):
+            diceArray = ["claw","3","3","1","2","2"]
+        elif (diceCode == "nothing"):
+            diceArray = ["1","1","2","2","3","3"]
+        elif (diceCode == "sixClaw"):
+            diceArray = ["claw","claw","claw","claw","claw","claw"]
+        elif (diceCode == "oneHeart"):
+            diceArray = ["heart","1","1","2","2","3"]
+        elif (diceCode == "sixEnergy"):
+            diceArray = ["energy","energy","energy","energy","energy","energy"]
+        elif (diceCode == "completeDestruction"):
+            diceArray = ["energy","claw","heart","1","2","3"]
+        elif (diceCode == "threeEnergyThreePoints"):
+            diceArray = ["energy","energy","energy","3","3","3"]
+        elif (diceCode == "twoEnergy"):
+            diceArray = ["energy","energy","1","1","3","3"]
+        elif (diceCode == "fiveEnergyOneClaw"):
+            diceArray = ["energy","energy","energy","energy","energy","claw"]
+        elif (diceCode == "twoClaw"):
+            diceArray = ["claw","claw","1","1","2","2"]
+        else:
+            response = "DICE CODE NOT FOUND, DICE NOT SET SERVER"
+            return response
+        self.dice = diceArray
+        return response
 
     def changeEnergy(self, player, energyToAdd):
         # if (self.hasCard(player, "Friend of Children")):
         # CHANGED TO ACCOUNT FOR NEGATIVE ENERGY
         if (self.hasCard(player, "Friend of Children") and energyToAdd > 0):
             energyToAdd += 1
-        self.updateMessage("Player " + str(player) + " earns " + str(energyToAdd) + " energy.")
+        if (energyToAdd != 0):
+            self.updateMessage("Player " + str(player) + " earns " + str(energyToAdd) + " energy.")
         self.addEnergy(player, energyToAdd)
 
     def inEdo(self, playerNumber):
@@ -421,6 +457,26 @@ class ShogunGame(models.Model):
         if (self.hasCard(player, "We're Only Making It Stronger") and healthToAdd <= -2):
             self.updateMessage("We're Only Making It Stronger activated.")
             self.changeEnergy(player, 1)
+    
+    def eliminatePlayer(self, player):
+        try:
+            playerIndex = self.getPlayersInGameNormal().index(player)
+        except ValueError:
+            playerIndex = -1
+        del self.notDirectUsePlayersInGame[playerIndex]
+        if (self.inEdo(player)):
+            self.removeFromEdo(player)
+        self.updateMessage("Player " + str(player) + " is eliminated!")
+        if (len(self.getPlayersInGameNormal()) == 1):
+            self.updateMessage("Player " + str(self.getPlayersInGameNormal()[0]) + " wins!")
+            # self.alertWindow("Player " + this.localState.playersInGame[0] + " wins!")
+
+    def inEdo(self, playerNumber):
+        if (len(self.getPlayersInGameNormal()) <= 4):
+            if (playerNumber != self.edo): return False
+        else:
+            if (playerNumber != self.edo and playerNumber != self.bayEdo): return False
+        return True
 
     def addPoints(self, player, newPoints):
         try:
@@ -493,7 +549,7 @@ class ShogunGame(models.Model):
         if (self.hasCard(self.currentTurn, "Nova Breath")):
             for i in range(len(self.getPlayersInGameNormal())):
                 if (self.getPlayersInGameNormal()[i] != self.currentTurn):
-                    playersToDamage.append(self.playersInGame[i])
+                    playersToDamage.append(self.getPlayersInGameNormal()[i])
         else:
             for i in range(len(self.getPlayersInGameNormal())):
                 if (self.inEdo(self.getPlayersInGameNormal()[i]) == damageBool):
@@ -515,7 +571,7 @@ class ShogunGame(models.Model):
         for i in range(len(playersToElim)):
             self.eliminatePlayer(playersToElim[i])
         if (len(self.getPlayersInGameNormal()) == 1):
-            self.updateMessage("Player " + self.playersInGame[0] + " wins!")
+            self.updateMessage("Player " + str(self.getPlayersInGameNormal()[0]) + " wins!")
     
     def buy(self, cardNumber):
         response = ""
@@ -525,13 +581,13 @@ class ShogunGame(models.Model):
         if (self.canYield):
             response = "Deal with yield before buying."
             return response
-        if (len(self.deck) - 1 < cardNumber):
-            response = "Cannot buy card " + (cardNumber + 1) + " because it doesn't exist."
-            return response
         if (self.canBuy):
             # if (cardNumber == -1):
             if (cardNumber == 10):
                 self.advanceTurn()
+                return response
+            elif (len(self.deck) - 1 < cardNumber):
+                response = "Cannot buy card " + str(cardNumber + 1) + " because it doesn't exist."
                 return response
             else:
                 boughtCard = self.deck[cardNumber]
@@ -542,6 +598,7 @@ class ShogunGame(models.Model):
                 else:
                     # self.addEnergy(self.currentTurn - 1, -boughtCardModifiedCost)
                     # CHANGED
+                    self.updateMessage("Player " + str(self.currentTurn) + " bought card " + boughtCard['name'] + ".")
                     self.addEnergy(self.currentTurn, -boughtCardModifiedCost)
                     del self.deck[cardNumber]
                     if (boughtCard['type'] == 'discard'):
@@ -552,6 +609,12 @@ class ShogunGame(models.Model):
         else:
             response = "Cannot buy until you resolve your roll."
         return response
+
+    def removeFromEdo(self, player):
+        if (self.edo == player):
+            self.edo = 0
+        elif (self.bayEdo == player):
+            self.bayEdo = 0
 
     def clearBuy(self):
         response = ""
@@ -600,26 +663,25 @@ class ShogunGame(models.Model):
     def discardCardEffect(self, card):
         self.updateMessage(card['name'] + " activated.")
         if card['name'] == 'Apartment Building':
-            self.updateMessage("Player " + self.currentTurn + " earns 3 points from card.")
+            self.updateMessage("Player " + str(self.currentTurn) + " earns 3 points from card.")
             self.addPoints(self.currentTurn, 3)
         elif card['name'] == 'Commuter Train':
-            self.updateMessage("Player " + self.currentTurn + " earns 2 points from card.")
+            self.updateMessage("Player " + str(self.currentTurn) + " earns 2 points from card.")
             self.addPoints(self.currentTurn, 2)
         elif card['name'] == 'Corner Store':
-            self.updateMessage("Player " + self.currentTurn + " earns 1 points from card.")
+            self.updateMessage("Player " + str(self.currentTurn) + " earns 1 points from card.")
             self.addPoints(self.currentTurn, 1)
         elif card['name'] == 'Evacuation Orders':
             self.updateMessage("All players (other than the active player) lose 5 points.")
             for i in range(len(self.getPlayersInGameNormal())):
-                if (self.currentTurn != self.playersInGame[i]):
-                    self.addPoints(self.playersInGame[i], -5)
+                if (self.currentTurn != self.getPlayersInGameNormal()[i]):
+                    self.addPoints(self.getPlayersInGameNormal()[i], -5)
         elif card['name'] == 'Fire Blast':
             self.updateMessage("All players (other than the active player) take 2 damage.")
             playersToFireBlast = []
             for i in range(len(self.getPlayersInGameNormal())):
-                if (self.currentTurn != self.playersInGame[i]):
-                    playersToFireBlast.append(self.playersInGame[i])
-                    # self.changeHealth(self.playersInGame[i], -2)
+                if (self.currentTurn != self.getPlayersInGameNormal()[i]):
+                    playersToFireBlast.append(self.getPlayersInGameNormal()[i])
             for i in range(len(playersToFireBlast)):
                 self.changeHealth(playersToFireBlast[i], -2)
         elif card['name'] == 'Heal':
@@ -627,12 +689,12 @@ class ShogunGame(models.Model):
         elif card['name'] == 'Gas Refinery':
             self.updateMessage("All players (other than the active player) take 3 damage.")
             for i in range(len(self.getPlayersInGameNormal())):
-                if (self.currentTurn != self.playersInGame[i]):
-                    self.changeHealth(self.playersInGame[i], -3)
+                if (self.currentTurn != self.getPlayersInGameNormal()[i]):
+                    self.changeHealth(self.getPlayersInGameNormal()[i], -3)
             self.addPoints(self.currentTurn, 2)
         elif card['name'] == 'High Altitude Bombing':
             for i in range(len(self.getPlayersInGameNormal()), -1, -1):
-                self.changeHealth(self.playersInGame[i], -3)
+                self.changeHealth(self.getPlayersInGameNormal()[i], -3)
         elif card['name'] == "Jet Fighters":
             self.changeHealth(self.currentTurn, -4)
             self.addPoints(self.currentTurn, 5)
@@ -672,7 +734,11 @@ class ShogunGame(models.Model):
                     potentialPlayers.append(player % self.totalNumberOfPlayers)
             nextClosestPlayer = self.getPlayersInGameNormal()[0]
             for i in range(len(potentialPlayers)):
-                if (self.playersInGame.indexOf(potentialPlayers[i]) != -1):
+                try:
+                    newIndex = self.getPlayersInGameNormal().index(potentialPlayers[i])
+                except ValueError:
+                    newIndex = -1
+                if (newIndex != -1):
                     nextClosestPlayer = potentialPlayers[i]
                     break
         else:
@@ -689,7 +755,7 @@ class ShogunGame(models.Model):
                 self.addEnergy(self.currentTurn, 1)
         if (self.hasCard(self.currentTurn, "Energy Hoarder") and self.getEnergyNormal()[self.currentTurn - 1] >= 6):
             self.updateMessage("Energy Hoarder activated.")
-            energyToAdd = floor(self.getEnergyNormal()[self.currentTurn - 1] / 6)
+            energyToAdd = math.floor(self.getEnergyNormal()[self.currentTurn - 1] / 6)
             self.addEnergy(self.currentTurn, energyToAdd)
 
     def endTurnAllProcedures(self):
@@ -705,7 +771,7 @@ class ShogunGame(models.Model):
                             break
                     if (j == (len(self.getPlayersInGameNormal()) - 1)):
                         self.updateMessage("Underdog activated.")
-                        self.addPoints(self.playersInGame[i], 1)
+                        self.addPoints(self.getPlayersInGameNormal(self)[i], 1)
 
     def startTurnProcedures(self):
         if (self.inEdo(self.currentTurn)):

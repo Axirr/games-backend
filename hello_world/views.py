@@ -142,9 +142,11 @@ def createGameShogun(request):
     return HttpResponse(new_entry.id)
     # new_entry.save()
 
-def resetGameShogun(request, gameId):
+def resetGameShogun(request, gameId, numberPlayers):
     game = ShogunGame.objects.get(id=gameId)
-    game.setup(4)
+    if (numberPlayers == 0):
+        numberPlayers = game.maxPlayers
+    game.setup(numberPlayers)
     game.save()
     game = serializers.serialize("json", [game,])
     return HttpResponse(game)
@@ -212,5 +214,57 @@ def yieldEdoShogun(request, gameId, edoString):
 def clearBuyShogun(request, gameId):
     game = ShogunGame.objects.get(id=gameId)
     response = game.clearBuy()
+    game.save()
+    return HttpResponse(response)
+
+def resetTestsShogun(request):
+    testGameIds = [1, 2, 3, 4, 5, 6, 7]
+    numberOfPlayers = [4, 4, 4, 4, 4, 4, 4]
+    decksForGames = [
+                [
+                {'name': 'Omnivore', 'cost': 4, 'type': 'keep', 'ability': "Can score [1][2][3] for 2 points now. Can still use in other combos."},
+                {'name': 'Regeneration', 'cost': 4, 'type': 'keep', 'ability': "When you heal, heal one extra damage."},
+                {'name': 'Rooting For The Underdog', 'cost': 3, 'type': 'keep', 'ability': "At the end of a turn where you have the fewest points, gain a point."},
+            ],[
+                {'name': 'National Guard', 'cost': 3, 'type': 'discard', 'ability': "+2[Star] and take 2 damage."},
+                {'name': 'Nova Breath', 'cost': 7, 'type': 'keep', 'ability': "Your attacks damage all other players."},
+                {'name': 'Nuclear Power Plant', 'cost': 6, 'type': 'discard', 'ability': "+2[Star] and heal 3 damage."},
+            ],[
+                {'name': 'Friend of Children', 'cost':	3, 'type': 'keep', 'ability':	'When you gain energy, gain an additional energy.'},
+                {'name': 'Acid Attack', 'cost':	6, 'type': 'keep', 'ability':	"Deal one extra damage (even when you don't attack)"},
+                {'name': 'Alien Metabolism', 'cost':	3, 'type': 'keep', 'ability':	'Buying cards costs you 1 less energy'},
+                {'name': 'Apartment Building', 'cost': 5, 'type': 'discard', 'ability': '+ 3[Star]'},
+                {'name': 'Commuter Train', 'cost': 4, 'type': 'discard', 'ability': '+ 2[Star]'},
+                {'name': 'Corner Store', 'cost': 3, 'type': 'discard', 'ability': '+ 1[Star]'}
+            ],[
+                {'name': 'Apartment Building', 'cost': 5, 'type': 'discard', 'ability': '+ 3[Star]'},
+                {'name': 'Commuter Train', 'cost': 4, 'type': 'discard', 'ability': '+ 2[Star]'},
+                {'name': 'Corner Store', 'cost': 3, 'type': 'discard', 'ability': '+ 1[Star]'}
+            ],[
+                {'name': 'Apartment Building', 'cost': 5, 'type': 'discard', 'ability': '+ 3[Star]'},
+                {'name': 'Commuter Train', 'cost': 4, 'type': 'discard', 'ability': '+ 2[Star]'},
+                {'name': 'Corner Store', 'cost': 3, 'type': 'discard', 'ability': '+ 1[Star]'},
+                {'name': 'Apartment Building', 'cost': 5, 'type': 'discard', 'ability': '+ 3[Star]'},
+                {'name': 'Apartment Building', 'cost': 5, 'type': 'discard', 'ability': '+ 3[Star]'},
+                {'name': 'Apartment Building', 'cost': 5, 'type': 'discard', 'ability': '+ 3[Star]'},
+            ],[
+                {'name': 'Evacuation Orders', 'cost': 7, 'type': 'discard', 'ability': 'All other monsters lose 5[Star]'},
+                {'name': 'Fire Blast', 'cost': 3, 'type': 'discard', 'ability': 'Deal 2 damage to all other monsters'},
+                {'name': 'Giant Brain', 'cost': 5, 'type': 'keep', 'ability': 'Get an extra reroll each turn.'},
+            ],[
+                {'name': 'Complete Destruction', 'cost': 3, 'type': 'keep', 'ability': 'If you roll [1][2][3][Heart][Attack][Energy] gain 9[Star] in addition to the regular results.'},
+                {'name': 'Energy Hoarder', 'cost': 3, 'type': 'keep', 'ability': 'You gain 1[Star] for every 6[Energy] you have at the end of your turn.'},
+                {'name': 'Even Bigger', 'cost': 4, 'type': 'keep', 'ability': 'Your maximum [Heart] is increased by 2. Gain 2[Heart] when you get this card.'},
+            ],
+    ]
+    for i in range(len(testGameIds)):
+        game = ShogunGame.objects.get(id=testGameIds[i])
+        response = game.setup(numberOfPlayers[i], decksForGames[i], False)
+        game.save()
+    return HttpResponse("")
+
+def setDiceShogun(request, gameId, diceCode):
+    game = ShogunGame.objects.get(id=gameId)
+    response = game.setDice(diceCode)
     game.save()
     return HttpResponse(response)

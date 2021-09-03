@@ -18,7 +18,7 @@ urlpatterns = [
              path('loveletter/<int:gameId>/checkId/', views.checkIdLoveLetter, name='checkIdLoveLetter'),
              path('loveletter/<int:gameId>/resetGame/<int:deckNumber>/', views.resetGameLoveLetter, name='resetGameLoveLetter'),
              path('shogun/creategame/', views.createGameShogun, name='createGameShogun'),
-             path('shogun/resetgame/<int:gameId>/', views.resetGameShogun, name='resetGameShogun'),
+             path('shogun/resetgame/<int:gameId>/<int:numberPlayers>/', views.resetGameShogun, name='resetGameShogun'),
              path('shogun/gamestate/<int:gameId>/', views.gameStateShogun, name='gameStateShogun'),
              path('shogun/roll/<int:gameId>/<int:playerNumber>/', views.rollShogun, name='rollShogun'),
              path('shogun/<int:gameId>/checkId/', views.checkIdShogun, name='checkIdShogun'),
@@ -30,4 +30,6 @@ urlpatterns = [
              path('shogun/<int:gameId>/setmaxvictory/<int:maxVictory>/', views.setMaxVictoryShogun, name='maxVictoryShogun'),
              path('shogun/<int:gameId>/yieldedo/<str:edoString>/', views.yieldEdoShogun, name='yieldEdoShogun'),
              path('shogun/<int:gameId>/clearbuy/', views.clearBuyShogun, name='clearBuyShogun'),
+             path('shogun/resettests/', views.resetTestsShogun, name='resetTestsShogun'),
+             path('shogun/<int:gameId>/setdice/<str:diceCode>/', views.setDiceShogun, name='setDiceShogun'),
              ]

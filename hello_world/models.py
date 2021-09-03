@@ -965,6 +965,7 @@ class LoveLetterGame(models.Model):
             cardIndex = -1
         if (cardIndex != -1):
             if (not self.isValidTarget(card, targetNumber)):
+                self.alertWindow("Invalid move. Not a valid target.")
                 return False
         return True
     
@@ -989,7 +990,8 @@ class LoveLetterGame(models.Model):
         if (self.isOnlyHandmaidenTargets(card)):
             return True
         elif (self.isHandMaiden[myTarget - 1] == "1"):
-        # Check not self unless prince
+            return False
+        else:
             try:
                 secondCardIndex = ['king', 'guard', 'baron', 'priest', 'guard'].index(card)
             except ValueError:
@@ -998,12 +1000,13 @@ class LoveLetterGame(models.Model):
                 if (myTarget == self.currentTurn):
                     self.alertWindow("INVALID MOVE. Cannot target self except with prince.")
                     return False
-                elif (len(self.playersInGame) > 2):
-                    self.alertWindow("INVALID MOVE. Cannot target handmaiden player.")
-                    return False
+                # elif (len(self.playersInGame) > 2):
+                #     self.alertWindow("INVALID MOVE. Cannot target handmaiden player.")
+                #     return False
                 elif (card == "prince"):
                     self.alertWindow("INVALID MOVE. Cannot target handmaiden player. Remember, Prince can target self.")
                     return False
+            # BUG PRINCE SELF TARGETTING
         return True
     
     
@@ -1200,12 +1203,16 @@ class LoveLetterGame(models.Model):
                 playerToEliminate = self.currentTurn
                 message = "Player " + str(self.currentTurn) + " loses against Player " + str(myTarget) + " in baron comparison."
             self.updateMessage(message)
-            if (playerToEliminate != 0):
-                self.eliminatePlayer(playerToEliminate)
             if (not isDrawCardPlayed):
                 self.replaceCard(self.currentTurn)
             else:
                 self.replaceCard(0)
+            if (playerToEliminate != 0):
+                self.eliminatePlayer(playerToEliminate)
+            # if (not isDrawCardPlayed):
+            #     self.replaceCard(self.currentTurn)
+            # else:
+            #     self.replaceCard(0)
             self.advanceTurn()
         elif (card == 'priest'):
             self.updateMessage("Player " + str(self.currentTurn) + " looks at the hand of Player " + str(myTarget) + ".")

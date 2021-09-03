@@ -998,13 +998,13 @@ class LoveLetterGame(models.Model):
                 secondCardIndex = -1
             if (secondCardIndex != -1):
                 if (myTarget == self.currentTurn):
-                    self.alertWindow("INVALID MOVE. Cannot target self except with prince.")
+                    # self.alertWindow("INVALID MOVE. Cannot target self except with prince.")
                     return False
                 # elif (len(self.playersInGame) > 2):
                 #     self.alertWindow("INVALID MOVE. Cannot target handmaiden player.")
                 #     return False
                 elif (card == "prince"):
-                    self.alertWindow("INVALID MOVE. Cannot target handmaiden player. Remember, Prince can target self.")
+                    # self.alertWindow("INVALID MOVE. Cannot target handmaiden player. Remember, Prince can target self.")
                     return False
             # BUG PRINCE SELF TARGETTING
         return True

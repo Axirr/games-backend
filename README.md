@@ -1,0 +1,1 @@
+Django backend for react-playground (https://github.com/Axirr/React-Playground) publicly available at https://www.scottsherlock.xyz/

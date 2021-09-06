@@ -944,15 +944,14 @@ class LoveLetterGame(models.Model):
             print("Player found way")
             self.currentTurn = intPlayersInGame[(currentIndex + 1) % len(intPlayersInGame)]
 
-    def deal(self, numberPlayers, deckNumber=0):
+    def deal(self, numberPlayers, deck=None, doShuffle=True):
         newDeck = []
-        doShuffle = True
-        if (deckNumber == 0):
+        if (deck == None):
             newDeck = ["guard", "guard", "guard", "guard", "guard", "priest", "priest", "baron", "baron", "handmaiden",
         "handmaiden", "prince", "prince", "king", "countess", "princess"]
         else:
             doShuffle = False
-            newDeck = self.getDeckForDeckNumber(deckNumber)
+            newDeck = deck
         if (doShuffle):
             random.shuffle(newDeck)
         deckCopy = copy.copy(newDeck)
@@ -1226,28 +1225,32 @@ class LoveLetterGame(models.Model):
                 self.replaceCard(0)
                 self.advanceTurn()
         elif (card == 'prince'):
-            self.updateMessage("Player " + str(myTarget) + " discards their hand.")
-            self.updateMessage("Player " + str(myTarget) + " hand card was a " + self.hands[myTarget - 1] + ".")
-            deckCopy = copy.copy(self.deck)
-            handsCopy = copy.copy(self.hands)
-            discardedCard = handsCopy[myTarget - 1]
             if (myTarget == self.currentTurn):
-                if (discardedCard == "prince"):
-                    discardedCard = self.drawCard
-            if (len(deckCopy) >= 1):
-                handsCopy[myTarget - 1] = deckCopy.pop()
+                discardedCard = notPlayedCard
+                if (discardedCard == "princess"):
+                    self.hands[myTarget - 1] = "princess"
+                    self.eliminatePlayer(myTarget)
+                    self.normalDrawAndAdvance(isDrawCardPlayed)
+                else:
+                    self.updateMessage("Player " + str(myTarget) + " discards their hand.")
+                    self.updateMessage("Player " + str(myTarget) + " hand card was a " + discardedCard + ".")
+                    if (len(self.deck) >= 1):
+                        self.hands[myTarget - 1] = self.deck.pop()
+                    else:
+                        self.hands[myTarget - 1] = self.setAsideCard
+                self.normalDrawAndAdvance(isDrawCardPlayed=True)
             else:
-                handsCopy[myTarget - 1] = self.setAsideCard
-            self.hands = handsCopy
-            if (myTarget == self.currentTurn):
-                self.replaceCard(0)
-                self.advanceTurn()
-            else:
-                self.replaceCard(self.currentTurn)
-                self.advanceTurn()
-            if (discardedCard == "princess"):
-                self.eliminatePlayer(myTarget)
-                self.advanceTurn()
+                discardedCard = self.hands[myTarget - 1]
+                if (discardedCard == "princess"):
+                    self.eliminatePlayer(myTarget)
+                else:
+                    self.updateMessage("Player " + str(myTarget) + " discards their hand.")
+                    self.updateMessage("Player " + str(myTarget) + " hand card was a " + discardedCard + ".")
+                    if (len(self.deck) >= 1):
+                        self.hands[myTarget - 1] = self.deck.pop()
+                    else:
+                        self.hands[myTarget - 1] = self.setAsideCard
+                self.normalDrawAndAdvance(isDrawCardPlayed)
         elif (card == 'handmaiden'):
             self.updateMessage("Player " + str(self.currentTurn) + " is immune until their next turn.")
             handmaidenCopy = copy.copy(self.isHandMaiden)

@@ -17,6 +17,7 @@ urlpatterns = [
              path('loveletter/playCard/<int:gameId>/<str:card>/<int:playerNumber>/<int:target>/<str:guardGuess>/', views.playCardLoveLetter, name='loveLetterPlayCard'),
              path('loveletter/<int:gameId>/checkId/', views.checkIdLoveLetter, name='checkIdLoveLetter'),
              path('loveletter/<int:gameId>/resetGame/<int:deckNumber>/', views.resetGameLoveLetter, name='resetGameLoveLetter'),
+             path('loveletter/resettests/', views.resetTestsLoveLetter, name='resetTestsLoveLetter'),
              path('shogun/creategame/', views.createGameShogun, name='createGameShogun'),
              path('shogun/resetgame/<int:gameId>/<int:numberPlayers>/', views.resetGameShogun, name='resetGameShogun'),
              path('shogun/gamestate/<int:gameId>/', views.gameStateShogun, name='gameStateShogun'),

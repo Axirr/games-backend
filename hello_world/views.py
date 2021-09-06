@@ -268,3 +268,21 @@ def setDiceShogun(request, gameId, diceCode):
     response = game.setDice(diceCode)
     game.save()
     return HttpResponse(response)
+
+def resetTestsLoveLetter(request):
+    testGameIds = [1, 2, 3, 4, 5, 6, 7]
+    numberOfPlayers = [4, 4, 4, 4, 4, 4, 4]
+    decksForGames = [
+            ["guard", "guard","guard","countess","priest","guard","king", "baron", "king", "princess"],
+            ["guard", "guard","guard","countess","priest","guard","king", "baron", "priest", "handmaiden"],
+            ["guard", "guard","guard","countess","priest","baron","king", "baron", "princess", "prince"],
+            ["guard", "guard","guard","countess","priest","princess","king", "baron", "guard", "prince"],
+            ["guard", "guard","guard","countess","priest","prince","king", "baron", "guard", "handmaiden"],
+            ["princess","prince","king", "baron", "guard", "handmaiden"],
+            ["guard", "guard","guard","countess","priest","baron","king", "baron", "guard", "baron"],
+    ]
+    for i in range(len(testGameIds)):
+        game = LoveLetterGame.objects.get(id=testGameIds[i])
+        response = game.deal(numberOfPlayers[i], decksForGames[i], False)
+        game.save()
+    return HttpResponse("")

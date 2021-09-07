@@ -73,9 +73,9 @@ def createGame(request):
 def index(request):
     return HttpResponse("")
 
-def createLoveLetterGame(request):
+def createLoveLetterGame(request, numberOfPlayers=4):
     new_entry = LoveLetterGame()
-    new_entry.deal(4)
+    new_entry.deal(numberOfPlayers)
     new_entry.save()
     # new_entry.save()
     # new_entry = serialize('json', [new_entry, ])
@@ -270,8 +270,8 @@ def setDiceShogun(request, gameId, diceCode):
     return HttpResponse(response)
 
 def resetTestsLoveLetter(request):
-    testGameIds = [1, 2, 3, 4, 5, 6, 7]
-    numberOfPlayers = [4, 4, 4, 4, 4, 4, 4]
+    testGameIds = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    numberOfPlayers = [4, 4, 4, 4, 4, 4, 4, 3, 4]
     decksForGames = [
             ["guard", "guard","guard","countess","priest","guard","king", "baron", "king", "princess"],
             ["guard", "guard","guard","countess","priest","guard","king", "baron", "priest", "handmaiden"],
@@ -279,7 +279,9 @@ def resetTestsLoveLetter(request):
             ["guard", "guard","guard","countess","priest","princess","king", "baron", "guard", "prince"],
             ["guard", "guard","guard","countess","priest","prince","king", "baron", "guard", "handmaiden"],
             ["princess","prince","king", "baron", "guard", "handmaiden"],
-            ["guard", "guard","guard","countess","priest","baron","king", "baron", "guard", "baron"],
+            ["guard", "guard","guard","countess","priest","king","king", "baron", "guard", "countess"],
+            ["guard", "guard","guard","countess","priest","prince","prince", "baron", "guard", "countess"],
+            ["guard", "guard","guard","countess","priest","baron","prince", "baron", "guard", "baron"],
     ]
     for i in range(len(testGameIds)):
         game = LoveLetterGame.objects.get(id=testGameIds[i])

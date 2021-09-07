@@ -889,8 +889,8 @@ class LoveLetterGame(models.Model):
     setAsideCard = CharField(max_length=30, default="none")
     isDisplayed = ListCharField(
         base_field=models.CharField(max_length=1),
-        size=6,
-        max_length=(6*2),
+        size=10,
+        max_length=(10*2),
         default=['0','0','0','0', '0', '0']
     )
     useDefaultDeck = models.BooleanField(default=True)
@@ -944,9 +944,9 @@ class LoveLetterGame(models.Model):
             print("Player found way")
             self.currentTurn = intPlayersInGame[(currentIndex + 1) % len(intPlayersInGame)]
 
-    def deal(self, numberPlayers, deck=None, doShuffle=True):
+    def deal(self, numberPlayers, deck=0, doShuffle=True):
         newDeck = []
-        if (deck == None):
+        if (deck == 0):
             newDeck = ["guard", "guard", "guard", "guard", "guard", "priest", "priest", "baron", "baron", "handmaiden",
         "handmaiden", "prince", "prince", "king", "countess", "princess"]
         else:

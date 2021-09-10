@@ -218,8 +218,8 @@ def clearBuyShogun(request, gameId):
     return HttpResponse(response)
 
 def resetTestsShogun(request):
-    testGameIds = [1, 2, 3, 4, 5, 6, 7]
-    numberOfPlayers = [4, 4, 4, 4, 4, 4, 4]
+    testGameIds = [1, 2, 3, 4, 5, 6, 7, 8]
+    numberOfPlayers = [4, 4, 4, 4, 4, 4, 4, 4]
     decksForGames = [
                 [
                 {'name': 'Omnivore', 'cost': 4, 'type': 'keep', 'ability': "Can score [1][2][3] for 2 points now. Can still use in other combos."},
@@ -255,6 +255,10 @@ def resetTestsShogun(request):
                 {'name': 'Complete Destruction', 'cost': 3, 'type': 'keep', 'ability': 'If you roll [1][2][3][Heart][Attack][Energy] gain 9[Star] in addition to the regular results.'},
                 {'name': 'Energy Hoarder', 'cost': 3, 'type': 'keep', 'ability': 'You gain 1[Star] for every 6[Energy] you have at the end of your turn.'},
                 {'name': 'Even Bigger', 'cost': 4, 'type': 'keep', 'ability': 'Your maximum [Heart] is increased by 2. Gain 2[Heart] when you get this card.'},
+            ],[
+                {'name': 'Energy Hoarder', 'cost': 3, 'type': 'keep', 'ability': 'You gain 1[Star] for every 6[Energy] you have at the end of your turn.'},
+                {'name': 'Gas Refinery', 'cost': 6, 'type': 'discard', 'ability': "Gain 2[Star] and deal 3 damage to all other monsters."},
+                {'name': 'High Altitude Bombing', 'cost': 4, 'type': 'discard', 'ability': "All monsters (including you) take 3 damage."},
             ],
     ]
     for i in range(len(testGameIds)):

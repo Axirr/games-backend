@@ -691,18 +691,19 @@ class ShogunGame(models.Model):
             for i in range(len(self.getPlayersInGameNormal())):
                 if (self.currentTurn != self.getPlayersInGameNormal()[i]):
                     playersToFireBlast.append(self.getPlayersInGameNormal()[i])
-            for i in range(len(playersToFireBlast)):
+            for i in range(len(playersToFireBlast) -1, -1, -1):
                 self.changeHealth(playersToFireBlast[i], -2)
         elif card['name'] == 'Heal':
             self.changeHealth(self.currentTurn, 2)
         elif card['name'] == 'Gas Refinery':
             self.updateMessage("All players (other than the active player) take 3 damage.")
-            for i in range(len(self.getPlayersInGameNormal())):
+            for i in range(len(self.getPlayersInGameNormal()) -1, -1, -1):
                 if (self.currentTurn != self.getPlayersInGameNormal()[i]):
                     self.changeHealth(self.getPlayersInGameNormal()[i], -3)
             self.addPoints(self.currentTurn, 2)
         elif card['name'] == 'High Altitude Bombing':
-            for i in range(len(self.getPlayersInGameNormal()), -1, -1):
+            for i in range(len(self.getPlayersInGameNormal()) - 1, -1, -1):
+                print("index", i)
                 self.changeHealth(self.getPlayersInGameNormal()[i], -3)
         elif card['name'] == "Jet Fighters":
             self.changeHealth(self.currentTurn, -4)

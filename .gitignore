@@ -36,5 +36,9 @@ env.bak/
 venv.bak/
 
 *.swp
+*.pyc
+*.cpython*
+*/__pycache__/*
+/hello_world/__pycache__/*
 
 # End of https://www.toptal.com/developers/gitignore/api/django

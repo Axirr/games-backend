@@ -760,7 +760,7 @@ class ShogunGame(models.Model):
 
     def endTurnSelfProcedures(self):
         if (self.hasCard(self.currentTurn, "Solar Powered")):
-            if (self.energy[self.currentTurn - 1] == 0):
+            if (self.getEnergyNormal()[self.currentTurn - 1] == 0):
                 self.updateMessage("Solar Powered activated.")
                 self.addEnergy(self.currentTurn, 1)
         if (self.hasCard(self.currentTurn, "Energy Hoarder") and self.getEnergyNormal()[self.currentTurn - 1] >= 6):
@@ -781,7 +781,7 @@ class ShogunGame(models.Model):
                             break
                     if (j == (len(self.getPlayersInGameNormal()) - 1)):
                         self.updateMessage("Underdog activated.")
-                        self.addPoints(self.getPlayersInGameNormal(self)[i], 1)
+                        self.addPoints(self.getPlayersInGameNormal()[i], 1)
 
     def startTurnProcedures(self):
         if (self.inEdo(self.currentTurn)):
@@ -812,6 +812,7 @@ class ShogunGame(models.Model):
             return response
         self.canYield = False
         self.buttonPhase = 2
+        # self.updateMessage("Player " + str(self.edo) + " does not yield Edo.")
         return response
 
     def keepCardImmediateEffect(self, card):

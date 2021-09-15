@@ -38,7 +38,7 @@ class LoveLetterGame(models.Model):
         base_field=CharField(max_length=100),
         size=6,
         max_length=(6 * 101),
-        default=["blank message", "blank message", "blank message", "blank message", "blank message", "blank message"]
+        default=["none", "none", "none", "none", "none", "none"]
     )
     setAsideCard = CharField(max_length=30, default="none")
     isDisplayed = ListCharField(
@@ -69,6 +69,7 @@ class LoveLetterGame(models.Model):
         return data
 
     def advanceTurn(self):
+        self.checkIfGameOver()
         intPlayersInGame = list(map(int, self.playersInGame))
         try:
             # print("Current turn is ", self.currentTurn)
@@ -131,7 +132,7 @@ class LoveLetterGame(models.Model):
         self.isDisplayed = isDisplayed
         self.totalNumberOfPlayers = numberPlayers
         self.playedCards = []
-        self.message = ["blank message","blank message","blank message","blank message","blank message","blank message"]
+        self.message = ["none","none","none","none","none","none"]
 
     def playCard(self, card, playerNumber, target, guardGuess):
         response = ""
@@ -265,7 +266,7 @@ class LoveLetterGame(models.Model):
         self.deal(self.totalNumberOfPlayers, deckNumber)
 
     def replaceCard(self, playerNumber):
-        self.checkIfGameOver()
+        # self.checkIfGameOver()
         if (len(self.deck) == 0):
             drawnCard = "none"
         else:

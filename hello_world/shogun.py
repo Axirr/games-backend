@@ -633,12 +633,12 @@ class ShogunGame(models.Model):
         if (self.getEnergyNormal()[self.currentTurn - 1] < 2):
             response = "Not enough money to clear."
             return response
-        else:
-            self.addEnergy(self.currentTurn, -2)
-            # CHANGED IMPLEMENT FIX THIS
-            del self.deck[0]
-            del self.deck[0]
-            del self.deck[0]
+        self.addEnergy(self.currentTurn, -2)
+        # CHANGED IMPLEMENT FIX THIS
+        del self.deck[0]
+        del self.deck[0]
+        del self.deck[0]
+        self.updateMessage("Buy cards cleared by Player " + str(self.currentTurn) + ".")
         return response
 
     def yieldEdo(self, location):
@@ -786,9 +786,10 @@ class ShogunGame(models.Model):
     def startTurnProcedures(self):
         if (self.inEdo(self.currentTurn)):
             pointsToEarn = 2
+            self.updateMessage("Player " + str(self.currentTurn) + " starts in Edo.")
             if (self.hasCard(self.currentTurn, "Urbavore")):
+                this.updateMessage("Urbavore activated. One extra point earned for starting in Edo.")
                 pointsToEarn += 1
-            self.updateMessage("Player " + str(self.currentTurn) + " gets " + str(pointsToEarn) + " points for starting in Edo.")
             self.addPoints(self.currentTurn, pointsToEarn)
         self.resetRolls()
         self.buttonPhase = 0

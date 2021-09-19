@@ -723,7 +723,7 @@ class ShogunGame(models.Model):
             self.addPoints(self.currentTurn, 4)
         elif card['name'] == "Army":
             cardNumber = len(self.hands[self.currentTurn - 1])
-            print("Card number" + cardNumber)
+            print("Card number" + str(cardNumber))
             self.changeHealth(self.currentTurn, -cardNumber)
             self.addPoints(self.currentTurn, cardNumber)
         else:

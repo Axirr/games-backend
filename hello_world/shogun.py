@@ -788,7 +788,7 @@ class ShogunGame(models.Model):
             pointsToEarn = 2
             self.updateMessage("Player " + str(self.currentTurn) + " starts in Edo.")
             if (self.hasCard(self.currentTurn, "Urbavore")):
-                this.updateMessage("Urbavore activated. One extra point earned for starting in Edo.")
+                self.updateMessage("Urbavore activated. One extra point earned for starting in Edo.")
                 pointsToEarn += 1
             self.addPoints(self.currentTurn, pointsToEarn)
         self.resetRolls()

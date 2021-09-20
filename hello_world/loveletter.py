@@ -69,7 +69,6 @@ class LoveLetterGame(models.Model):
         return data
 
     def advanceTurn(self):
-        self.checkIfGameOver()
         intPlayersInGame = list(map(int, self.playersInGame))
         try:
             # print("Current turn is ", self.currentTurn)
@@ -266,7 +265,7 @@ class LoveLetterGame(models.Model):
         self.deal(self.totalNumberOfPlayers, deckNumber)
 
     def replaceCard(self, playerNumber):
-        # self.checkIfGameOver()
+        self.checkIfGameOver()
         if (len(self.deck) == 0):
             drawnCard = "none"
         else:

@@ -9,6 +9,7 @@ from hello_world.models import RPSGame
 # from hello_world.models import ShogunGame
 from .shogunViews import *
 from .loveletterViews import *
+from .deepSeaViews import *
 
 def returnGameState(request, gameId):
     # data = serializers.serialize("json", RPSGame.objects.all())

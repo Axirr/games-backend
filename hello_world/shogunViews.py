@@ -9,13 +9,7 @@ def createGameShogun(request):
     new_entry = ShogunGame()
     new_entry.setup(4)
     new_entry.save()
-    # new_entry.save()
-    # new_entry = serialize('json', [new_entry, ])
-    # print(new_entry)
-    # print(new_entry.hands)
-    # jsonObject = new_entry.jsonForm()
     return HttpResponse(new_entry.id)
-    # new_entry.save()
 
 def resetGameShogun(request, gameId, numberPlayers):
     game = ShogunGame.objects.get(id=gameId)

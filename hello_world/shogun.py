@@ -119,9 +119,6 @@ class ShogunGame(models.Model):
     ]
 
     def setup(self, numberPlayers, deck=None, isShuffle=True):
-        # self.canBuy = False
-        # self.canYield = False
-        # self.buttonPhase = 0
         newDice = ["none", "none", "none", "none", "none", "none"]
         newSaved = ["0", "0", "0", "0", "0", "0"]
         newHands = []
@@ -173,8 +170,6 @@ class ShogunGame(models.Model):
     
     def getPlayersInGameNormal(self):
         return list(map(int, self.notDirectUsePlayersInGame))
-    
-    # def setPlayersInGameNormal(self, index):
     
     def getEnergyNormal(self):
         return list(map(int, self.notDirectUseEnergy))
@@ -273,32 +268,26 @@ class ShogunGame(models.Model):
         print(diceIndexNumber)
         return response
     
-    def pointsForRoll(self):
-        pointsToAdd = 0
-        count = self.count(self.dice, '1')
-        if (self.hasCard(self.currentTurn, "Gourmet")):
-            if (count >= 3): pointsToAdd += count 
-        else:
-            if (count >= 3): pointsToAdd += count - 2
-        count = self.count(self.dice, '2')
-        if (count >= 3): pointsToAdd += count - 1
-        count = self.count(self.dice, '3')
-        if (count >= 3): pointsToAdd += count 
-        if (self.hasCard(self.currentTurn, "Omnivore")):
-            onesCount = self.count(self.dice, '1')
-            twosCount = self.count(self.dice, '2')
-            threesCount = self.count(self.dice, '3')
-            if (onesCount >= 1 and twosCount >= 1 and threesCount >= 1):
-                self.updateMessage("Omnivore effect activated.")
-                pointsToAdd += 2
-        return pointsToAdd
-    
-    def count(self, myArray, item):
-        count = 0
-        for i in range(len(myArray)):
-            if (myArray[i] == item):
-                count += 1
-        return count
+    # BUG was implemented twice, not sure which is the right one
+    # def pointsForRoll(self):
+    #     pointsToAdd = 0
+    #     count = self.count(self.dice, '1')
+    #     if (self.hasCard(self.currentTurn, "Gourmet")):
+    #         if (count >= 3): pointsToAdd += count 
+    #     else:
+    #         if (count >= 3): pointsToAdd += count - 2
+    #     count = self.count(self.dice, '2')
+    #     if (count >= 3): pointsToAdd += count - 1
+    #     count = self.count(self.dice, '3')
+    #     if (count >= 3): pointsToAdd += count 
+    #     if (self.hasCard(self.currentTurn, "Omnivore")):
+    #         onesCount = self.count(self.dice, '1')
+    #         twosCount = self.count(self.dice, '2')
+    #         threesCount = self.count(self.dice, '3')
+    #         if (onesCount >= 1 and twosCount >= 1 and threesCount >= 1):
+    #             self.updateMessage("Omnivore effect activated.")
+    #             pointsToAdd += 2
+    #     return pointsToAdd
 
     def pointsForRoll(self):
         pointsToAdd = 0
@@ -323,6 +312,13 @@ class ShogunGame(models.Model):
                 self.updateMessage("Omnivore effect activated.")
                 pointsToAdd += 2
         return pointsToAdd
+    
+    def count(self, myArray, item):
+        count = 0
+        for i in range(len(myArray)):
+            if (myArray[i] == item):
+                count += 1
+        return count
 
     def hasCard(self, player, cardName):
         playerHand = self.hands[player - 1]
@@ -344,7 +340,6 @@ class ShogunGame(models.Model):
         healthToAdd = 0
         damage = 0
         pointsToAdd = self.pointsForRoll()
-        # pointsToAdd = 0
         count = self.count(self.dice, 'energy')
         energyToAdd += count
         count = self.count(self.dice, 'heart')
@@ -365,7 +360,7 @@ class ShogunGame(models.Model):
                     self.canYield = True
             else:
                 print("IMPLEMENT yield for double Edo")
-            # Fix for both and yield
+            # FIX IMPLEMENT for both and yield
         if (self.hasCard(self.currentTurn, "Complete Destruction")):
             diceFaces = ['claw','heart','energy', '1','2','3']
             diceCounts = list(map(lambda face : self.count(self.dice, face), diceFaces))
@@ -411,8 +406,6 @@ class ShogunGame(models.Model):
         return response
 
     def changeEnergy(self, player, energyToAdd):
-        # if (self.hasCard(player, "Friend of Children")):
-        # CHANGED TO ACCOUNT FOR NEGATIVE ENERGY
         if (self.hasCard(player, "Friend of Children") and energyToAdd > 0):
             energyToAdd += 1
         if (energyToAdd != 0):
@@ -435,11 +428,7 @@ class ShogunGame(models.Model):
 
     def onlyCurrentPlayerInEdo(self):
         returnValue = (self.edo == self.currentTurn or self.edo == 0) and (self.bayEdo == self.currentTurn or self.bayEdo == 0)
-        # print("return value" + returnValue)
-        # print(self.edo)
-        # print(self.bayEdo)
         return returnValue
-        # return (self.edo == self.currentTurn || self.edo == 0) and (self.bayEdo == self.currentTurn || self.bayEdo == 0)
 
     def changeHealth(self, player, healthToAdd):
         healString = " heals for "
@@ -471,8 +460,6 @@ class ShogunGame(models.Model):
         self.updateMessage("Player " + str(player) + " is eliminated!")
         if (len(self.getPlayersInGameNormal()) == 1):
             self.winProcedures(self.getPlayersInGameNormal()[0])
-            # self.updateMessage("Player " + str(self.getPlayersInGameNormal()[0]) + " wins!")
-            # self.alertWindow("Player " + this.localState.playersInGame[0] + " wins!")
 
     def inEdo(self, playerNumber):
         if (len(self.getPlayersInGameNormal()) <= 4):
@@ -518,7 +505,6 @@ class ShogunGame(models.Model):
             playerToCheck = self.getPlayersInGameNormal()[i]
             if (self.getPointsNormal()[playerToCheck - 1] >= self.winPoints):
                 if (self.getHealthNormal()[playerToCheck - 1] > 0):
-                    # self.updateMessage("Player " + str(playerToCheck) + " wins!")
                     self.winProcedures(playerToCheck)
                 break
     
@@ -563,7 +549,6 @@ class ShogunGame(models.Model):
             for i in range(len(self.getPlayersInGameNormal())):
                 if (self.inEdo(self.getPlayersInGameNormal()[i]) == damageBool):
                     playersToDamage.append(self.getPlayersInGameNormal()[i])
-        # }
         print("playersToDamage ", playersToDamage)
         for i in range(len(playersToDamage)):
             self.changeHealth(playersToDamage[i], -damage)
@@ -591,7 +576,7 @@ class ShogunGame(models.Model):
             response = "Deal with yield before buying."
             return response
         if (self.canBuy):
-            # if (cardNumber == -1):
+            ## Cardnumber hard coded to 10 for done buying, poor, FIX CHANGE
             if (cardNumber == 10):
                 self.advanceTurn()
                 return response
@@ -605,8 +590,6 @@ class ShogunGame(models.Model):
                     response = 'Not enough money to buy.'
                     return response
                 else:
-                    # self.addEnergy(self.currentTurn - 1, -boughtCardModifiedCost)
-                    # CHANGED
                     self.updateMessage("Player " + str(self.currentTurn) + " bought card " + boughtCard['name'] + ".")
                     self.addEnergy(self.currentTurn, -boughtCardModifiedCost)
                     del self.deck[cardNumber]
@@ -634,7 +617,7 @@ class ShogunGame(models.Model):
             response = "Not enough money to clear."
             return response
         self.addEnergy(self.currentTurn, -2)
-        # CHANGED IMPLEMENT FIX THIS
+        # CHANGED IMPLEMENT FIX 
         del self.deck[0]
         del self.deck[0]
         del self.deck[0]
@@ -813,7 +796,6 @@ class ShogunGame(models.Model):
             return response
         self.canYield = False
         self.buttonPhase = 2
-        # self.updateMessage("Player " + str(self.edo) + " does not yield Edo.")
         return response
 
     def keepCardImmediateEffect(self, card):

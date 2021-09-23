@@ -67,7 +67,6 @@ def dropTreasureDeepSea(request, gameId):
 
 def spoofDiceDeepSea(request, gameId, diceValue):
     diceArray = [0,0]
-    print("diceValue", diceValue)
     if (diceValue == 2):
         diceArray = [1,1]
     elif (diceValue == 3):
@@ -79,8 +78,7 @@ def spoofDiceDeepSea(request, gameId, diceValue):
     elif (diceValue == 6):
         diceArray = [3,3]
     else:
-        print('should not be here')
-        return HttpResponse("Dice value not correct.")
+        return HttpResponse("Spoofed dice value not correct.")
     game = DeepSeaGame.objects.get(id=gameId)
     game.setDice(diceArray)
     response = game.roll(withRoll=False)
@@ -95,3 +93,15 @@ def resetTestsDeepSea(request):
         response = game.setup(numberOfPlayers[i])
         game.save()
     return HttpResponse("")
+
+def setMaxOxygenDeepSea(request, gameId, maxOxygen):
+    game = DeepSeaGame.objects.get(id=gameId)
+    response = game.setMaxOxygen(maxOxygen)
+    game.save()
+    return HttpResponse(response)
+    
+def setMaxRoundsDeepSea(request, gameId, maxRounds):
+    game = DeepSeaGame.objects.get(id=gameId)
+    response = game.setMaxRemainingRounds(maxRounds)
+    game.save()
+    return HttpResponse(response)

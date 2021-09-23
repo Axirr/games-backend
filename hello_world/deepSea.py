@@ -89,7 +89,6 @@ class DeepSeaGame(models.Model):
     
     def setDice(self, diceArray):
         self.dice = diceArray
-        print("New dice are", self.dice)
     
     def roll(self, withRoll = True, withAdvance = False):
         response = ""
@@ -98,8 +97,7 @@ class DeepSeaGame(models.Model):
                 random.choice([1,2,3]),
                 random.choice([1,2,3]),
             ]
-        else:
-            print(self.dice)
+        print("dice", self.dice)
         self.buttonPhase = 2
         self.updateMessage("Player " + str(self.currentTurn) + " rolls " + str(self.dice[0] + self.dice[1]) + ".")
         self.resolveRoll()
@@ -126,6 +124,7 @@ class DeepSeaGame(models.Model):
             print("Not initial move.")
             indexToMoveTo = playerIndex
         remainingMoves = movementValue
+        print("movement value", movementValue)
         incrementor = 1
         if (self.isUp[self.currentTurn - 1]):
             incrementor = -1
@@ -133,18 +132,26 @@ class DeepSeaGame(models.Model):
             print("remaining moves(outside) " + str(remainingMoves))
         print("indexToMoveTo", indexToMoveTo)
         print("incrementor", incrementor)
+        # while (remainingMoves > 0 and indexToMoveTo != -1):
         while (remainingMoves > 0):
             indexToMoveTo = self.nextFreeSpace(indexToMoveTo + incrementor)
             remainingMoves = remainingMoves - 1
             print("Remaining moves" + str(remainingMoves))
+            if indexToMoveTo == -1:
+                break
         if (indexToMoveTo >= 0):
             self.board[indexToMoveTo] = self.currentTurn
         else:
             self.doRemove = True
             print("Players " + str(self.playersInGame))
-            for i in range(len(self.heldTreasure)):
+            print("savedTreasure", self.savedTreasure)
+            print("heldTreasure", self.heldTreasure)
+            for i in range(len(self.heldTreasure[self.currentTurn - 1])):
                 self.savedTreasure[self.currentTurn - 1].append(self.heldTreasure[self.currentTurn - 1][i])
             self.heldTreasure[self.currentTurn - 1] = []
+        if (self.doRemove):
+            self.updateMessage("Player " + str(self.currentTurn) + " returns to the sub!")
+            self.advanceTurn()
     
     def getRollValue(self):
         return self.dice[0] + self.dice[1]
@@ -164,12 +171,13 @@ class DeepSeaGame(models.Model):
         if (currentIndex == -1):
             potentialPlayers = []
             # for (var i = 1 i < self.totalNumberOfPlayers i++) {
-            for i in range(1, self.totalNumberOfPlayers):
+            # BUG?
+            for i in range(1, self.maxPlayers):
                 player = i + self.currentTurn 
-                if (player <= self.totalNumberOfPlayers):
+                if (player <= self.maxPlayers):
                     potentialPlayers.append(player)
                 else:
-                    potentialPlayers.append(player % self.totalNumberOfPlayers)
+                    potentialPlayers.append(player % self.maxPlayers)
             nextClosestPlayer = self.playersInGame[0]
             for i in range(0, len(potentialPlayers)):
                 if (self.playersInGame.index(potentialPlayers[i]) != -1):
@@ -181,7 +189,14 @@ class DeepSeaGame(models.Model):
         if (self.doRemove):
             self.doRemove = False
             # self.playersInGame.splice(self.playersInGame.index(self.currentTurn), 1)
-            del self.playersInGame[self.currentTurn]
+            print("deleting")
+            indexOfPlayer = -1
+            try:
+                indexOfPlayer = self.playersInGame.index(self.currentTurn)
+            except ValueError:
+                pass
+            if (indexOfPlayer != -1):
+                del self.playersInGame[indexOfPlayer]
         print("Next closest player" + str(nextClosestPlayer))
         self.currentTurn = nextClosestPlayer
         self.startTurnProcedures()
@@ -190,7 +205,9 @@ class DeepSeaGame(models.Model):
     def startTurnProcedures(self):
         self.subtractOxygen()
         self.resetRoll()
-        if (self.oxygenCounter <= 0):
+        if (len(self.playersInGame) == 0):
+            self.createNewRound()
+        elif (self.oxygenCounter <= 0):
             self.remainingRounds -= 1
             if (self.remainingRounds == 0):
                 self.buttonPhase = -1
@@ -217,7 +234,8 @@ class DeepSeaGame(models.Model):
         # for (i = len(self.treasureBoard) - 1 i >= 0 i--) {
         for i in range(len(self.treasureBoard) - 1, -1, -1):
             if (self.treasureBoard[i] == "x"):
-                self.treasureBoard.splice(i, 1)
+                # self.treasureBoard.splice(i, 1)
+                del self.treasureBoard[i]
         self.board = []
         # for (i = 0 i < len(self.treasureBoard) i++) {
         for i in range(0, len(self.treasureBoard)):
@@ -248,7 +266,8 @@ class DeepSeaGame(models.Model):
             # for (j = 0 j < len(treasures) j++) {
             for j in range(0, len(treasures)):
                 if (treasures[j] == 1):
-                    points[i] = points[i] + singlePoints.splice(Math.floor(Math.random() * len(singlePoints)), 1)
+                    # points[i] = points[i] + singlePoints.splice(Math.floor(Math.random() * len(singlePoints)), 1)
+                    points[i] = points[i] + singlePoints.pop(floor(random() * len(singlePoints)))
                 else:
                     print("Not equal to 1. Is self right?")
         maxPlayerNumber = -1
@@ -275,24 +294,22 @@ class DeepSeaGame(models.Model):
         incrementor = 1
         if (self.isUp[self.currentTurn - 1]):
             incrementor = -1
-        if (True):
-            # for (i = targetIndex i >= -1 i = i + incrementor) {
-            # BUG for reverse iteration?
-            i = targetIndex
-            while (i >= 0):
-            # for i in range(targetIndex, -1, incrementor):
-                # // Bounce back
-                testValue = i
-                if (i >= len(self.board)):
-                    testValue = (len(self.board) - 1) - (i - len(self.board))
-                print("Testing index " + str(testValue))
-                if (self.board[testValue] == 0):
-                    returnIndex = testValue
-                    break
-                if (testValue == -1):
-                    returnIndex = -1
-                    break
-                i = i + incrementor
+        # BUG bounce back not working right. should last space count twice?
+            # // Bounce back
+        i = targetIndex
+        while (i >= -1):
+        # while (i > -1):
+            testValue = i
+            if (i >= len(self.board)):
+                testValue = (len(self.board) - 1) - (i - len(self.board))
+            print("Testing index " + str(testValue))
+            if (self.board[testValue] == 0):
+                returnIndex = testValue
+                break
+            if (testValue == -1):
+                returnIndex = -1
+                break
+            i = i + incrementor
         return returnIndex
 
     def spaceHasTreasure(self):
@@ -330,3 +347,16 @@ class DeepSeaGame(models.Model):
             messageCopy[i] = messageCopy[i+1]
         messageCopy[len(messageCopy) - 1] = newMessage
         self.message = messageCopy
+    
+    def setMaxOxygen(self, maxOxygen):
+        response = ""
+        self.maxOxygen = maxOxygen
+        self.oxygenCounter = min(self.maxOxygen, self.oxygenCounter)
+        return response
+    
+    def setMaxRemainingRounds(self, remainingRounds):
+        response = ""
+        self.maxRemainingRounds = remainingRounds
+        print("maxRemainingRounds", self.maxRemainingRounds)
+        self.remainingRounds = min(self.maxRemainingRounds, self.remainingRounds)
+        return response

@@ -44,4 +44,7 @@ urlpatterns = [
              path('deepsea/droptreasure/<int:gameId>/', views.dropTreasureDeepSea, name='dropTreasureDeepSea'),
              path('deepsea/spoofdice/<int:gameId>/<int:diceValue>/', views.spoofDiceDeepSea, name='spoofDiceDeepSea'),
              path('deepsea/resettests/', views.resetTestsDeepSea, name='resetTestsDeepSea'),
+             path('deepsea/resettests/', views.resetTestsDeepSea, name='resetTestsDeepSea'),
+             path('deepsea/setmaxoxygen/<int:gameId>/<int:maxOxygen>/', views.setMaxOxygenDeepSea, name='setMaxOxygenDeepSea'),
+             path('deepsea/setmaxrounds/<int:gameId>/<int:maxRounds>/', views.setMaxRoundsDeepSea, name='setMaxRoundsDeepSea'),
              ]

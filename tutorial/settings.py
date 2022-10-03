@@ -83,9 +83,9 @@ WSGI_APPLICATION = 'tutorial.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'OPTIONS': {
-            'read_default_file': '/etc/mysql/my.cnf',
-        },
+        'NAME': 'game_data',
+        'USER': 'root',
+        'PASSWORD': 'Jdwv9h3dT2Ix',
     }
 }
 

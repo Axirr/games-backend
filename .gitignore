@@ -41,5 +41,7 @@ venv.bak/
 */__pycache__/*
 /hello_world/__pycache__/*
 /tutorial/my.cnf
+*my.cnf*
+*bakServerSettings.py*
 
 # End of https://www.toptal.com/developers/gitignore/api/django

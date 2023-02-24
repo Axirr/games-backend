@@ -1,3 +1,4 @@
+import os
 """
 Django settings for tutorial project.
 
@@ -16,14 +17,24 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-g4pt%5*1nuvq74u%v!z=l3g0+=-uyr_l(ezw@fn6fd*k%briln'
+secretKeyUrl = os.environ.get("DJANGO_SECRET_KEY")
+if secretKeyUrl is None:
+    print("SECRET KEY NOT SET. EXITING")
+    exit()
+SECRET_KEY = secretKeyUrl
+databaseConfigPath = os.environ.get("SQL_CONFIG_FILE")
+if databaseConfigPath is None:
+    print("SQL CONFIG FILE PATH NOT SET. EXITING")
+    exit()
 
 # SECURITY WARNING: don't run with debug turned on in production!
+# Has to be kept on currently to serve static files
 DEBUG = True
+
+# DEBUG = False
+# SECURE_SSL_REDIRECT = True
+# SESSION_COOKIE_SECURE = True
+# CSRF_COOKIE_SECURE = True
 
 ALLOWED_HOSTS = ['44.230.70.0',
                  '0.0.0.0',
@@ -84,15 +95,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'OPTIONS': {
-            'read_default_file': '/etc/mysql/my.cnf',
+            'read_default_file': databaseConfigPath,
         },
     }
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.mysql',
-    #     'NAME': 'game_data',
-    #     'USER': 'root',
-    #     'PASSWORD': 'Jdwv9h3dT2Ix',
-    # }
 }
 
 
@@ -133,8 +138,20 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
+# STATIC_ROOT = 'staticfiles'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+# MAY NEED THIS
+# STATICFILES_STORAGE = ''
+STATICFILES_DIRS = [
+    BASE_DIR / "hello_world/static",
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# # Media config
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = BASE_DIR / 'graphs'

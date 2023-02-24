@@ -1,7 +1,10 @@
 from django.urls import path
 from . import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
+             path('graph/<str:dataName>/<str:timeGroup>/<str:noWeekend>/<str:minZero>/', views.refreshGraph, name='refreshGraph'),
              path('rps/<int:gameId>/', views.returnGameState, name='returnGameState'),
              path('rps/<int:gameId>/left/<int:handCode>/', views.setLeft, name='setLeft'),
              path('rps/<int:gameId>/right/<int:handCode>/', views.setRight, name='setRight'),
@@ -48,3 +51,6 @@ urlpatterns = [
              path('deepsea/setmaxoxygen/<int:gameId>/<int:maxOxygen>/', views.setMaxOxygenDeepSea, name='setMaxOxygenDeepSea'),
              path('deepsea/setmaxrounds/<int:gameId>/<int:maxRounds>/', views.setMaxRoundsDeepSea, name='setMaxRoundsDeepSea'),
              ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

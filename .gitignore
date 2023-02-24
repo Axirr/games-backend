@@ -45,3 +45,8 @@ venv.bak/
 *bakServerSettings.py*
 
 # End of https://www.toptal.com/developers/gitignore/api/django
+
+*staticfiles*
+*evernoteDataParsing/*
+hello_world/evernoteDataParsing/
+*my*

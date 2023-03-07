@@ -27,18 +27,17 @@ if databaseConfigPath is None:
     print("SQL CONFIG FILE PATH NOT SET. EXITING")
     exit()
 
-# SECURITY WARNING: don't run with debug turned on in production!
-# Has to be kept on currently to serve static files
-DEBUG = True
+# DEBUG = True
 
 # DEBUG = False
-# SECURE_SSL_REDIRECT = True
-# SESSION_COOKIE_SECURE = True
-# CSRF_COOKIE_SECURE = True
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
-ALLOWED_HOSTS = ['44.230.70.0',
-                 '0.0.0.0',
-                 'www.scottsherlock.one']
+# Note: hosts means name it can serve under?
+ALLOWED_HOSTS = [
+    'www.scottsherlock.one'
+]
 
 
 # Application definition
@@ -65,7 +64,9 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware'
 ]
 
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOWED_ORIGIN = [
+    'www.scottsherlock.xyz'
+]
 
 ROOT_URLCONF = 'tutorial.urls'
 
@@ -140,8 +141,6 @@ USE_TZ = True
 STATIC_URL = '/static/'
 # STATIC_ROOT = 'staticfiles'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-# MAY NEED THIS
-# STATICFILES_STORAGE = ''
 STATICFILES_DIRS = [
     BASE_DIR / "hello_world/static",
 ]
@@ -150,8 +149,3 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
-# # Media config
-# MEDIA_URL = '/media/'
-# MEDIA_ROOT = BASE_DIR / 'graphs'

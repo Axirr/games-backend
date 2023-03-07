@@ -50,3 +50,4 @@ venv.bak/
 *evernoteDataParsing/*
 hello_world/evernoteDataParsing/
 *my*
+/hello_world/static/*

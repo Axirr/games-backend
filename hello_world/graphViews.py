@@ -1,10 +1,5 @@
-from django.http import FileResponse
 from django.http import HttpResponse
-from django.http import JsonResponse
-from django.core import serializers
-from .evernoteDataParsing.src.mySqlGraphCall import *
-import time
-import asyncio
+from .evernoteDataParsing.privateSrc.mySqlGraphCall import *
 
 def refreshGraph(request, dataName, timeGroup, noWeekend, minZero, boxPlot, normalizeData):
     optionsDict = {}
@@ -36,7 +31,7 @@ def refreshGraph(request, dataName, timeGroup, noWeekend, minZero, boxPlot, norm
         fileName = sqlGraphMultiple(dataNameArray, optionsDict)
     else:
         # Don't think we need this async
-        fileName = asyncio.run(sqlWrapperGraphCall(dataName, optionsDict))
+        fileName = sqlWrapperGraphCall(dataName, optionsDict)
 
 
     return HttpResponse(fileName)

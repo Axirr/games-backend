@@ -1,11 +1,12 @@
 from django.http import HttpResponse
 from .evernoteDataParsing.privateSrc.mySqlGraphCall import *
 
-def refreshGraph(request, dataName, timeGroup, noWeekend, minZero, boxPlot, normalizeData):
+def refreshGraph(request, dataName, timeGroup, noWeekend, minZero, graphType, normalizeData):
     optionsDict = {}
     
     if (timeGroup == "Daily"):
-        pass
+        # Not sure about this one
+        timeGroup = "date"
     elif timeGroup == "Rolling Average = 5":
         optionsDict[ROLLING_AVERAGE] = 5
     elif timeGroup == "Rolling Average = 7":
@@ -13,10 +14,12 @@ def refreshGraph(request, dataName, timeGroup, noWeekend, minZero, boxPlot, norm
     else:
         optionsDict[timeGroup] = timeGroup
     
-    if (boxPlot == BOX_PLOT):
+    if (graphType == BOX_PLOT):
         optionsDict[BOX_PLOT] = timeGroup
+    elif (graphType == BAR_OPTION):
+        optionsDict[BAR_OPTION] = timeGroup
     else:
-        print("no box plot since isBoxPlot is %s" % boxPlot)
+        print("defaulting to line graph")
 
     if (noWeekend != "IncludeWeekends"):  optionsDict[NO_WEEKEND] = NO_WEEKEND
     if (minZero == "YZeroMin"):  optionsDict[Y_MIN] = 0
@@ -31,7 +34,9 @@ def refreshGraph(request, dataName, timeGroup, noWeekend, minZero, boxPlot, norm
         fileName = sqlGraphMultiple(dataNameArray, optionsDict)
     else:
         # Don't think we need this async
-        fileName = sqlWrapperGraphCall(dataName, optionsDict)
+        print("Trying out multi graph for single graph")
+        # fileName = sqlWrapperGraphCall(dataName, optionsDict)
+        fileName = sqlGraphMultiple([dataName], optionsDict)
 
 
     return HttpResponse(fileName)

@@ -4,7 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-             path('graph/<str:dataName>/<str:timeGroup>/<str:noWeekend>/<str:minZero>/<str:graphType>/<str:normalizeData>/', views.refreshGraph, name='refreshGraph'),
+             path('graph/<str:dataName>/<str:timeGroup>/<str:noWeekend>/<str:minZero>/<str:graphType>/<str:normalizeData>/<str:noLegend>/<str:fromFirstValidDate>/', views.refreshGraph, name='refreshGraph'),
              path('rps/<int:gameId>/', views.returnGameState, name='returnGameState'),
              path('rps/<int:gameId>/left/<int:handCode>/', views.setLeft, name='setLeft'),
              path('rps/<int:gameId>/right/<int:handCode>/', views.setRight, name='setRight'),

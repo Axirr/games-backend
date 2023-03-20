@@ -43,15 +43,14 @@ def refreshGraph(request, dataName, timeGroup, noWeekend, minZero, graphType, no
 
     myDatabase = None
 
-    print()
-    print()
-    print()
-    myDatabase = PRIVATE_DATABASE_ARG
-    print("CONFIGURED FOR PRIVATE DATABASE. CHANGE FOR PRODUCTION")
-    print()
-    print()
-    print()
-
+    # print()
+    # print()
+    # print()
+    # myDatabase = PRIVATE_DATABASE_ARG
+    # print("CONFIGURED FOR PRIVATE DATABASE. CHANGE FOR PRODUCTION")
+    # print()
+    # print()
+    # print()
 
     try:
         if "," in dataName:

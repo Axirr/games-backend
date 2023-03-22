@@ -1,6 +1,7 @@
 from django.http import HttpResponse
 from .evernoteDataParsing.privateSrc.mySqlGraphCall import *
 from .evernoteDataParsing.src.globalConstants import *
+import os
 
 def refreshGraph(request, dataName, timeGroup, noWeekend, minZero, graphType, normalizeData, noLegend, fromFirstValidDate):
     optionsDict = {}
@@ -41,8 +42,9 @@ def refreshGraph(request, dataName, timeGroup, noWeekend, minZero, graphType, no
 
     print(optionsDict)
 
-    myDatabase = None
-
+    databaseName = os.getenv(DATABASE_NAME_ARG)
+    if databaseName == None:
+        return httpErrorResponse(Exception("ERROR: database not set"))
     # print()
     # print()
     # print()
@@ -58,13 +60,17 @@ def refreshGraph(request, dataName, timeGroup, noWeekend, minZero, graphType, no
             if (SIMPLE_LINEAR_REGRESSION in optionsDict):
                 if (len(dataNameArray) != 2):
                     raise(Exception("Wrong number of data series"))
-                fileName = sqlGraphRegression(dataNameArray[0], dataNameArray[1], optionsDict, optionsDict, {}, myDatabase)
+                fileName = sqlGraphRegression(dataNameArray[0], dataNameArray[1], optionsDict, optionsDict, {}, databaseName)
             else:
-                fileName = sqlGraphMultiple(dataNameArray, optionsDict, myDatabase)
+                fileName = sqlGraphMultiple(dataNameArray, optionsDict, databaseName)
         else:
-            fileName = sqlGraphMultiple([dataName], optionsDict, myDatabase)
+            fileName = sqlGraphMultiple([dataName], optionsDict, databaseName)
         print("fileName %s" % fileName)
         return HttpResponse(fileName)
     except Exception as e:
-        print(e)
-        return HttpResponse(status=500)
+        return httpErrorResponse(e)
+
+def httpErrorResponse(error):
+    if (error != None):
+        print(error)
+    return HttpResponse(status=500)

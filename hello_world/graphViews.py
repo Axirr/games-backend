@@ -3,13 +3,21 @@ from .evernoteDataParsing.privateSrc.mySqlGraphCall import *
 from .evernoteDataParsing.src.globalConstants import *
 import os
 
-def refreshGraph(request, dataName, timeGroup, noWeekend, minZero, graphType, normalizeData, noLegend, fromFirstValidDate):
+def refreshGraph(request, dataName, timeGroup, noWeekend, minZero, graphType, normalizeData, noLegend, fromFirstValidDate, onlyIntersection, shiftValue):
     optionsDict = {}
+
+    soloOptionsDict = {}
+
+    try:
+        numShiftValue = int(shiftValue)
+        soloOptionsDict[SHIFT] = numShiftValue
+    except:
+        return httpErrorResponse(Exception("Shift value not correct"))
+
     
-    if (timeGroup == "Daily"):
-        # Not sure about this one
-        timeGroup = "date"
-    elif timeGroup == "Rolling Average = 5":
+    # if (timeGroup == "Daily"):
+    #     optionsDict[DATE_FIELD] = DATE_FIELD
+    if timeGroup == "Rolling Average = 5":
         optionsDict[ROLLING_AVERAGE] = 5
     elif timeGroup == "Rolling Average = 7":
         optionsDict[ROLLING_AVERAGE] = 7
@@ -23,7 +31,6 @@ def refreshGraph(request, dataName, timeGroup, noWeekend, minZero, graphType, no
     elif (graphType == HISTOGRAM):
         optionsDict[HISTOGRAM] = HISTOGRAM
     elif (graphType == SIMPLE_LINEAR_REGRESSION):
-        print("graphing SLR")
         optionsDict[SIMPLE_LINEAR_REGRESSION] = SIMPLE_LINEAR_REGRESSION
     else:
         print("defaulting to line graph")
@@ -39,20 +46,15 @@ def refreshGraph(request, dataName, timeGroup, noWeekend, minZero, graphType, no
     if (fromFirstValidDate == FROM_FIRST_VALID_DATE):
         optionsDict[FROM_FIRST_VALID_DATE] = FROM_FIRST_VALID_DATE
         print("graphing from first valid date")
+    
+    if onlyIntersection == ONLY_INTERSECTION_OPTION:
+        optionsDict[ONLY_INTERSECTION_OPTION] = ONLY_INTERSECTION_OPTION
 
     print(optionsDict)
 
     databaseName = os.getenv(DATABASE_NAME_ARG)
     if databaseName == None:
         return httpErrorResponse(Exception("ERROR: database not set"))
-    # print()
-    # print()
-    # print()
-    # myDatabase = PRIVATE_DATABASE_ARG
-    # print("CONFIGURED FOR PRIVATE DATABASE. CHANGE FOR PRODUCTION")
-    # print()
-    # print()
-    # print()
 
     try:
         if "," in dataName:
@@ -60,11 +62,20 @@ def refreshGraph(request, dataName, timeGroup, noWeekend, minZero, graphType, no
             if (SIMPLE_LINEAR_REGRESSION in optionsDict):
                 if (len(dataNameArray) != 2):
                     raise(Exception("Wrong number of data series"))
-                fileName = sqlGraphRegression(dataNameArray[0], dataNameArray[1], optionsDict, optionsDict, {}, databaseName)
+
+                xOptionsDict = {}
+                yOptionsDict = optionsDict
+
+                for key in optionsDict:
+                    xOptionsDict[key] = optionsDict[key]
+                if len(soloOptionsDict) > 0:
+                    for key in soloOptionsDict:
+                        xOptionsDict[key] = soloOptionsDict[key]
+                fileName = sqlGraphRegression(dataNameArray[0], dataNameArray[1], xOptionsDict, yOptionsDict, {}, databaseName)
             else:
-                fileName = sqlGraphMultiple(dataNameArray, optionsDict, databaseName)
+                fileName = sqlGraphMultiple(dataNameArray, optionsDict, databaseName, soloOptionsDict)
         else:
-            fileName = sqlGraphMultiple([dataName], optionsDict, databaseName)
+            fileName = sqlGraphMultiple([dataName], optionsDict, databaseName, {})
         print("fileName %s" % fileName)
         return HttpResponse(fileName)
     except Exception as e:
